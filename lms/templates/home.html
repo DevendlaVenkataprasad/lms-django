@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMS Home</title>
+    <style>
+        /* Style for Login Button */
+        .login-button {
+            position: absolute;
+            top: 20px;
+            right: 20px; /* Changed to left */
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .login-button:hover {
+            background: #45a049;
+        }
+        /* Chatbot Floating Button */
+        .chatbot-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Chatbot Container */
+        .chatbot-container {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+        }
+
+        .chatbot-header {
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .chatbot-messages {
+            height: 250px;
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        /* Chatbot Options */
+        .chatbot-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px;
+        }
+
+        .chatbot-option {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .chatbot-option:hover {
+            background: #388E3C;
+        }
+
+        .chatbot-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .chatbot-input button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <a href="{% url 'login' %}" class="login-button">Login</a>
+    <h1 style="text-align: center;">Welcome to LMS</h1>
+    
+    <!-- Chatbot Button -->
+    <button class="chatbot-button" onclick="toggleChatbot()">💬</button>
+
+    <!-- Chatbot Container -->
+    <div class="chatbot-container" id="chatbot">
+        <div class="chatbot-header">
+            Chatbot Assistant
+            <button id="close-chat" onclick="toggleChatbot()">✖</button>
+        </div>
+
+        <!-- Chatbot Messages -->
+        <div class="chatbot-messages" id="chatbot-messages">
+            <p>👋 Hi! How can I help you?</p>
+        </div>
+
+        <!-- Chatbot Options -->
+        <div class="chatbot-options">
+            <button class="chatbot-option" onclick="showAnswer('login')">🔓 How to Login</button>
+            <button class="chatbot-option" onclick="showAnswer('register')">📝 How to Register</button>
+            <button class="chatbot-option" onclick="showAnswer('reset_password')">🔑 How to Reset Password</button>
+            <button class="chatbot-option" onclick="showAnswer('courses')">📚 Courses</button>
+            
+        </div>
+
+        <!-- Chatbot Input -->
+        <div class="chatbot-input">
+            <input type="text" id="chat-input" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleChatbot() {
+            var chatbot = document.getElementById("chatbot");
+            chatbot.style.display = chatbot.style.display === "flex" ? "none" : "flex";
+        }
+
+        function showAnswer(option) {
+            var messageContainer = document.getElementById("chatbot-messages");
+
+            var responses = {
+                "courses": "Here are the available courses: <br>📌 Python <br>📌 Java <br>📌 Web Development <br>📌 Data Science.",
+                "reset_password": "To reset your password, go to 'Forgot Password' on the login page and follow the instructions.",
+                "login": "To log in, enter your email and password on the login page, then click 'Login'.",
+                "register": "To register, fill out the registration form, verify your email with OTP, and create a password."
+            };
+
+            // Display user selection and bot response
+            messageContainer.innerHTML += `<p><strong>You:</strong> ${option.replace('_', ' ')}</p>`;
+            messageContainer.innerHTML += `<p><strong>Bot:</strong> ${responses[option]}</p>`;
+
+            // Auto-scroll to the latest message
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        }
+
+        function sendMessage() {
+            var inputField = document.getElementById("chat-input");
+            var message = inputField.value.trim();
+            if (message === "") return;
+
+            var messageContainer = document.getElementById("chatbot-messages");
+            messageContainer.innerHTML += `<p><strong>You:</strong> ${message}</p>`;
+            inputField.value = "";
+
+            // Send message to backend
+            fetch("{% url 'chatbot_response' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: "message=" + encodeURIComponent(message)
+            })
+            .then(response => response.json())
+            .then(data => {
+                messageContainer.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            });
+        }
+    </script>
+
+</body>
+</html>
