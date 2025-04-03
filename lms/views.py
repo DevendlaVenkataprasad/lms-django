@@ -207,28 +207,288 @@ def get_chatbot_reply(user_message):
     }
     return responses.get(user_message, "I'm sorry, I didn't understand that. Can you rephrase?")
 
+from django.http import JsonResponse
+import json
+from django.contrib.auth.decorators import login_required
+from .models import Student, Teacher  # Import both models
+
+@login_required
+def update_profile(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        field = data.get("field")
+        value = data.get("value")
+
+        # Try to get student or teacher profile
+        student = Student.objects.filter(user=request.user).first()
+        teacher = Teacher.objects.filter(user=request.user).first()
+
+        profile = student if student else teacher
+        
+        if not profile:
+            return JsonResponse({"status": "error", "message": "Profile not found"}, status=404)
+
+        # Update the profile field
+        if hasattr(profile, field):
+            setattr(profile, field, value)
+            profile.save()
+            return JsonResponse({"status": "success", "message": f"{field} updated successfully!"})
+        
+        return JsonResponse({"status": "error", "message": "Invalid field"}, status=400)
+
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
+
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import Student, Teacher
+
+@login_required
+def upload_profile_picture(request):
+    if request.method == "POST" and request.FILES.get("profile_picture"):
+        image = request.FILES["profile_picture"]
+        image_path = f"profile_pictures/{request.user.id}_{image.name}"
+        
+        # Save the image using Django's default storage
+        saved_path = default_storage.save(image_path, ContentFile(image.read()))
+        
+        # Check if the user is a student or a teacher and update accordingly
+        student = Student.objects.filter(user=request.user).first()
+        teacher = Teacher.objects.filter(user=request.user).first()
+        
+        if student:
+            student.profile_picture = saved_path
+            student.save()
+            return JsonResponse({"status": "success", "image_url": student.profile_picture.url})
+        
+        if teacher:
+            teacher.profile_picture = saved_path
+            teacher.save()
+            return JsonResponse({"status": "success", "image_url": teacher.profile_picture.url})
+        
+        return JsonResponse({"status": "error", "message": "User not associated with Student or Teacher model"}, status=400)
+    
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
 
 
-from django.core.files.storage import FileSystemStorage
-import os
+import json
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from .models import Student, Teacher  # Import both models
+
+@login_required
+@csrf_exempt  # Allows AJAX requests (Use CSRF token in production)
+def edit_profile(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)  # Parse JSON data
+            field = data.get("field")  # Get the field name
+            value = data.get("value")  # Get the new value
+
+            # Check if the user is a student or a teacher
+            student = Student.objects.filter(user=request.user).first()
+            teacher = Teacher.objects.filter(user=request.user).first()
+
+            profile = student if student else teacher  # Determine profile type
+
+            if not profile:
+                return JsonResponse({"status": "error", "message": "Profile not found"}, status=404)
+
+            # Check if the field exists in the model
+            if hasattr(profile, field):
+                setattr(profile, field, value)  # Update field
+                profile.save()  # Save changes
+
+                return JsonResponse({"status": "success", "message": f"{field} updated successfully!"})
+
+            return JsonResponse({"status": "error", "message": "Invalid field"}, status=400)
+
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
+
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Education
+from .forms import EducationForm
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def edit_education(request):
+    if request.method == "POST":
+        education_id = request.POST.get("education_id")
+
+        # Fetch the education record for the logged-in user
+        if hasattr(request.user, 'student'):  # If the user is a student
+            education = get_object_or_404(Education, id=education_id, student=request.user.student)
+        elif hasattr(request.user, 'teacher'):  # If the user is a teacher
+            education = get_object_or_404(Education, id=education_id, teacher=request.user.teacher)
+        else:
+            return redirect("profile")  # If neither, redirect back
+
+        form = EducationForm(request.POST, request.FILES, instance=education)
+        if form.is_valid():
+            form.save()
+            return redirect("profile")  # Redirect back to profile page after saving
+        else:
+            print(form.errors)  # Debugging: Print form errors in the terminal
+
+    return redirect("profile")
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Student, Teacher, Education, Internship, Skill
 
 @login_required
 def profile_view(request):
-    student = Student.objects.get(user=request.user)
+    # Determine if user is a student or teacher
+    student = getattr(request.user, 'student', None)
+    teacher = getattr(request.user, 'teacher', None)
+
+    # Redirect if neither student nor teacher
+    if not (student or teacher):
+        return redirect('dashboard')
+
+    # Assign user role
+    user_profile = student if student else teacher
+    is_student = student is not None
+    is_teacher = teacher is not None
+
+    # Fetch education, internships, and skills for the logged-in user
+    education_list = Education.objects.filter(student=student) if is_student else Education.objects.filter(teacher=teacher)
+    internship_list = Internship.objects.filter(student=student) if is_student else Internship.objects.filter(teacher=teacher)
+    skills_list = Skill.objects.filter(student=student) if is_student else Skill.objects.filter(teacher=teacher)
 
     if request.method == "POST":
-        student.username = request.POST.get("username")
-        student.email = request.POST.get("email")
+        # Add Education
+        if 'institution_name' in request.POST:
+            Education.objects.create(
+                student=student if is_student else None,
+                teacher=teacher if is_teacher else None,
+                institution_name=request.POST.get('institution_name'),
+                degree=request.POST.get('degree'),
+                field_of_study=request.POST.get('field_of_study'),
+                start_date=request.POST.get('start_date'),
+                end_date=request.POST.get('end_date'),
+                grade=request.POST.get('grade'),
+                institution_logo=request.FILES.get('institution_logo')
+            )
+            return redirect('profile')
 
-        if 'profile_picture' in request.FILES:
-            profile_picture = request.FILES['profile_picture']
-            fs = FileSystemStorage(location='media/profile_pics/')  # Save inside media/profile_pics/
-            filename = fs.save(profile_picture.name, profile_picture)
-            student.profile_picture = f"profile_pics/{filename}"
+        # Add Internship
+        if 'company_name' in request.POST:
+            Internship.objects.create(
+                student=student if is_student else None,
+                teacher=teacher if is_teacher else None,
+                company_name=request.POST.get('company_name'),
+                role=request.POST.get('role'),
+                start_date=request.POST.get('start_date'),
+                end_date=request.POST.get('end_date')
+            )
+            return redirect('profile')
 
-        student.save()
-        return redirect("profile")  # Refresh profile page
+        # Add Skill
+        if 'skill_name' in request.POST:
+            Skill.objects.create(
+                student=student if is_student else None,
+                teacher=teacher if is_teacher else None,
+                name=request.POST.get('skill_name')
+            )
+            return redirect('profile')  # Ensure the page refreshes
 
-    return render(request, "profile.html", {"student": student})
+    return render(request, 'profile.html', {
+        'user_profile': user_profile,
+        'is_student': is_student,
+        'is_teacher': is_teacher,
+        'education_list': education_list,
+        'internship_list': internship_list,
+        'skills_list': skills_list,
+    })
 
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+from .models import Education
 
+@login_required
+def delete_education(request, education_id):
+    education = get_object_or_404(Education, id=education_id)
+
+    # Ensure only the owner (student/teacher) can delete the record
+    student_user = getattr(education.student, 'user', None)
+    teacher_user = getattr(education.teacher, 'user', None)
+
+    if request.user == student_user or request.user == teacher_user:
+        education.delete()
+        return redirect('profile')  # Redirect back to profile after deletion
+    else:
+        return HttpResponseForbidden("You are not authorized to delete this record.")  # Return 403 if unauthorized
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Internship
+
+def delete_internship(request, internship_id):
+    if request.method == "POST":
+        internship = get_object_or_404(Internship, id=internship_id)
+
+        # Check ownership for students and teachers
+        if (internship.student and internship.student.user == request.user) or \
+           (internship.teacher and internship.teacher.user == request.user):
+            internship.delete()
+            return JsonResponse({"success": True})
+
+        return JsonResponse({"success": False, "error": "Unauthorized"}, status=403)
+
+    return JsonResponse({"success": False, "error": "Invalid request"}, status=400)
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Internship
+
+def save_internship(request):
+    if request.method == "POST":
+        internship_id = request.POST.get("internship_id")  # Get internship ID from the form
+
+        # If an ID is provided, update the existing record
+        if internship_id:
+            internship = get_object_or_404(Internship, id=internship_id)
+
+            # Check if the logged-in user owns this internship
+            if (internship.student and internship.student.user == request.user) or \
+               (internship.teacher and internship.teacher.user == request.user):
+                internship.company_name = request.POST["company_name"]
+                internship.role = request.POST["role"]
+                internship.start_date = request.POST["start_date"]
+                internship.end_date = request.POST["end_date"]
+                internship.save()
+                return JsonResponse({"success": True, "message": "Internship updated successfully!"})
+            else:
+                return JsonResponse({"success": False, "error": "Unauthorized"}, status=403)
+        
+        # If no ID is provided, create a new internship (New Entry)
+        else:
+            user_type = request.POST.get("user_type")
+            if user_type == "student":
+                internship = Internship.objects.create(
+                    student=request.user.student,  # Associate with student
+                    company_name=request.POST["company_name"],
+                    role=request.POST["role"],
+                    start_date=request.POST["start_date"],
+                    end_date=request.POST["end_date"],
+                )
+            elif user_type == "teacher":
+                internship = Internship.objects.create(
+                    teacher=request.user.teacher,  # Associate with teacher
+                    company_name=request.POST["company_name"],
+                    role=request.POST["role"],
+                    start_date=request.POST["start_date"],
+                    end_date=request.POST["end_date"],
+                )
+
+            return JsonResponse({"success": True, "message": "Internship added successfully!"})
+
+    return JsonResponse({"success": False, "error": "Invalid request"}, status=400)

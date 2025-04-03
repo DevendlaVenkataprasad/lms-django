@@ -1,9 +1,11 @@
 from django import forms
 from django.contrib.auth.models import User
+from .models import Student, Education
 
 class RegisterForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput())
-    confirm_password = forms.CharField(widget=forms.PasswordInput())
+    password = forms.CharField(widget=forms.PasswordInput(), label="Password")
+    confirm_password = forms.CharField(widget=forms.PasswordInput(), label="Confirm Password")
+    profile_picture = forms.ImageField(required=False, label="Profile Picture")
 
     class Meta:
         model = User
@@ -18,3 +20,17 @@ class RegisterForm(forms.ModelForm):
             raise forms.ValidationError("Passwords do not match.")
         
         return cleaned_data
+
+
+class StudentProfileForm(forms.ModelForm):
+    class Meta:
+        model = Student
+        fields = ['username', 'email', 'profile_picture']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+class EducationForm(forms.ModelForm):
+    class Meta:
+        model = Education
+        fields = ['institution_name', 'degree', 'field_of_study', 'start_date', 'end_date', 'grade', 'institution_logo']

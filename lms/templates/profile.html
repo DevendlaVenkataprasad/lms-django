@@ -1,91 +1,844 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Profile</title>
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <title>Profile</title>
+
+    <!-- Add this in your <head> section if not already included -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <style>
         body {
-            background-color: #f4f4f4;
-            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
         }
-        .profile-container {
-            max-width: 450px;
-            margin: 40px auto;
+        .sidebar {
+            width: 250px;
+            height: 100vh;
             background: white;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            border-right: 1px solid #ddd;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
         }
         .profile-picture {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             object-fit: cover;
-            border: 4px solid #007bff;
-            margin-bottom: 10px;
+            border: 3px solid #007bff;
         }
-        .form-control {
-            border-radius: 5px;
+        .upload-btn {
+            display: block;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: #007bff;
+            cursor: pointer;
         }
-        .btn-save {
-            background-color: #28a745;
-            color: white;
-            padding: 10px;
+        .upload-btn:hover {
+            text-decoration: underline;
+        }
+        .profile-header {
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 270px;
+            padding: 20px;
+            width: calc(100% - 270px);
+        }
+        .details-card {
             width: 100%;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
+            max-width: 800px;
         }
-        .btn-dashboard {
-            background-color: #007bff;
-            color: white;
-            padding: 10px;
-            width: 100%;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
+        .btn-save, .btn-cancel {
+    margin-left: 8px;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-save {
+    background-color: green;
+    color: white;
+}
+
+.btn-cancel {
+    background-color: red;
+    color: white;
+}
+
+
+
+.education-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
+        .education-item {
+    position: relative;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+        .education-item:last-child {
+            border-bottom: none;
+        }
+        .institution-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            background-color: #ddd;
+        }
+        .edit-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ffc107;
+    border: none;
+    padding: 5px 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+        .edit-icon:hover {
+            color: #000;
+        }
+        .add-education-btn {
+            margin-bottom: 20px;
+        }
+        .education-form {
+            display: none; /* Initially hidden */
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            margin-bottom: 20px;
+        }
+
+.internship-item {
+    position: relative;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.edit-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ffc107;
+    border: none;
+    padding: 5px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
     </style>
 </head>
 <body>
-
-    <div class="profile-container">
-        <h2 class="text-center">Student Profile</h2>
-        
-        {% if student.profile_picture %}
-            <img src="{{ student.profile_picture.url }}" alt="Profile Picture" class="profile-picture">
-        {% else %}
-            <img src="{% static 'images/default-avatar.png' %}" alt="Default Profile" class="profile-picture">
-        {% endif %}
-
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="form-group">
-                <label>Username:</label>
-                <input type="text" name="username" class="form-control" value="{{ student.username }}">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Section -->
+            <div class="sidebar">
+                <div class="profile-header">
+                    <form id="upload-form" enctype="multipart/form-data">
+                        <label for="profile-upload">
+                            <img id="profile-img" src="{{ user_profile.profile_picture.url }}" alt="Profile Picture" class="profile-picture">
+                        </label>
+                        <input type="file" id="profile-upload" name="profile_picture" accept="image/*" hidden>
+                        <span class="upload-btn">Change Profile Picture</span>
+                    </form>
+    
+                    <h5><strong>{{ user_profile.username }}</strong></h5>
+                    
+                    {% if is_student %}
+                        <p class="text-muted">Student ID: {{ user_profile.id }}</p>
+                    {% elif is_teacher %}
+                        <p class="text-muted">Teacher ID: {{ user_profile.id }}</p>
+                    {% endif %}
+                </div>
+    
+                <nav class="nav flex-column">
+                    <a class="nav-link" onclick="showSection('basic-details')">Basic Details</a>
+                    <a class="nav-link" onclick="showSection('education-details')">Education Details</a>
+                    <a class="nav-link" onclick="showSection('internship-work')">Internship</a>
+                    <a class="nav-link" onclick="showSection('skills')">Skills</a>
+                </nav>
             </div>
+    
+            <!-- Profile Content -->
+           <!-- Profile Content -->
+<div class="main-content">
+    <div class="details-card card p-4" id="basic-details">
+        <h3>Basic Details</h3>
+        <p><strong>Full Name:</strong> {{ user_profile.username }}</p>
 
-            <div class="form-group">
-                <label>Email:</label>
-                <input type="email" name="email" class="form-control" value="{{ student.email }}">
-            </div>
+        <!-- Editable Date of Birth -->
+        <p>
+            <strong>Date of Birth:</strong> 
+            <span id="dob">{{ user_profile.dob }}</span> 
+            <span class="edit-btn" onclick="editField('dob')">
+                <i class="bi bi-pencil"></i>
+            </span>
+        </p>
 
-            <div class="form-group">
-                <label>Profile Picture:</label>
-                <input type="file" name="profile_picture" class="form-control">
-            </div>
+        <!-- Editable Gender -->
+        <p>
+            <strong>Gender:</strong> 
+            <span id="gender">{{ user_profile.gender }}</span> 
+            <span class="edit-btn" onclick="editField('gender')">
+                <i class="bi bi-pencil"></i>
+            </span>
+        </p>
 
-            <button type="submit" class="btn-save">Save Changes</button>
-        </form>
+        <!-- Editable College (For Students) / Institution (For Teachers) -->
+        <p>
+            <strong>{% if is_student %}College:{% elif is_teacher %}Institution:{% endif %}</strong> 
+            <span id="college">{{ user_profile.college }}</span> 
+            <span class="edit-btn" onclick="editField('college')">
+                <i class="bi bi-pencil"></i>
+            </span>
+        </p>
 
-        <br>
+        <h5>Summary</h5>
+        <p id="summary-text">{{ user_profile.summary|default:"You have not added a profile summary yet." }}</p>
+        <button class="btn btn-primary" onclick="addSummary()">+ Add New</button>
 
-        <a href="{% url 'student_dashboard' %}" class="btn-dashboard">Back to Dashboard</a>
+        <h5 class="mt-4">Address</h5>
+        <p>
+            <strong>Permanent Address:</strong> 
+            <span id="permanent_address">{{ user_profile.permanent_address }}</span> 
+            <span class="edit-btn" onclick="editField('permanent_address')">
+                <i class="bi bi-pencil"></i>
+            </span>
+        </p>
+
+        <p>
+            <strong>Current Address:</strong> 
+            <span id="current_address">{{ user_profile.current_address }}</span> 
+            <span class="edit-btn" onclick="editField('current_address')">
+                <i class="bi bi-pencil"></i>
+            </span>
+        </p>
     </div>
 
+
+        
+    
+    
+    <div id="education-details" class="section" style="display: none;">
+        <div class="education-container">
+            <button class="btn btn-primary add-education-btn" onclick="showForm()">+ Add Education</button>
+            <div class="education-form" id="educationForm">
+                <h3>Add Education</h3>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <label for="institution_name" class="form-label">Institution Name</label>
+                        <input type="text" id="institution_name" name="institution_name" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label for="degree" class="form-label">{% if user_type == 'student' %}Degree{% else %}Degree{% endif %}</label>
+                        <input type="text" id="degree" name="degree" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label for="field_of_study" class="form-label">Field of Study </label>
+                        <input type="text" id="field_of_study" name="field_of_study" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" id="start_date" name="start_date" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" id="end_date" name="end_date" class="form-control">
+                    </div>
+                    <div class="mb-2">
+                        <label for="grade" class="form-label">{% if user_type == 'student' %}Grade{% else %}Grade{% endif %}</label>
+                        <input type="text" id="grade" name="grade" class="form-control">
+                    </div>
+                    <div class="mb-2">
+                        <label for="institution_logo" class="form-label">Institution Logo</label>
+                        <input type="file" id="institution_logo" name="institution_logo" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-success">Save</button>
+                </form>
+            </div>
+            {% for edu in education_list %}
+            <div class="education-item position-relative">
+                {% if edu.institution_logo %}
+                    <img src="{{ edu.institution_logo.url }}" alt="Logo" class="institution-logo">
+                {% else %}
+                    <div class="institution-logo"></div>
+                {% endif %}
+                <div>
+                    <h5 class="mb-1"><strong>{{ edu.institution_name }}</strong></h5>
+                    <p class="mb-1 text-muted">{{ edu.degree }} - {{ edu.field_of_study }}</p>
+                    <p class="mb-1 text-muted">{{ edu.start_date|date:"Y M" }} - {{ edu.end_date|date:"Y M" }}</p>
+                    <p class="mb-0"><strong>{% if user_type == 'student' %}Grade{% else %}Grade{% endif %}:</strong> {{ edu.grade }}</p>
+                </div>
+                <button class="btn btn-warning btn-sm edit-icon" onclick="openEditModal('{{ edu.id }}', '{{ edu.institution_name|escapejs }}', '{{ edu.degree|escapejs }}', '{{ edu.field_of_study|escapejs }}', '{{ edu.start_date|date:'Y-m-d' }}', '{{ edu.end_date|date:'Y-m-d' }}', '{{ edu.grade|escapejs }}')" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+            </div>
+            
+
+            {% empty %}
+            <p class="text-center text-muted">No education details available.</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+
+                <!-- Edit Education Modal -->
+<!-- Edit Education Modal -->
+<div id="editEducationModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Education</h5>
+                <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editEducationForm" method="POST" action="{% url 'edit_education' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="user_type" value="{{ user_type }}">
+                    <input type="hidden" name="education_id" id="edit_education_id">
+                    
+                    <div class="mb-2">
+                        <label class="form-label">Institution Name</label>
+                        <input type="text" name="institution_name" id="edit_institution_name" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Degree</label>
+                        <input type="text" name="degree" id="edit_degree" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Field of Study</label>
+                        <input type="text" name="field_of_study" id="edit_field_of_study" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" name="start_date" id="edit_start_date" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">End Date</label>
+                        <input type="date" name="end_date" id="edit_end_date" class="form-control">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Grade</label>
+                        <input type="text" name="grade" id="edit_grade" class="form-control">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Institution Logo</label>
+                        <input type="file" name="institution_logo" id="edit_institution_logo" class="form-control">
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteEducation()">Delete</button>
+
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Internship Section (Properly Wrapped) -->
+<div id="internship-work" class="section" style="display: none;">
+    <h3>Internships</h3>
+    <button class="btn btn-primary" onclick="document.getElementById('internshipForm').style.display='block'">+ Add Internship</button>
+    
+    <div id="internshipForm" style="display: none;">
+        <form method="POST">
+            {% csrf_token %}
+            <label>Company Name</label>
+            <input type="text" name="company_name" id="company_name" class="form-control" required>
+
+            <label>Role</label>
+            <input type="text" name="role" id="role" class="form-control" required>
+
+            <label>Start Date</label>
+            <input type="date" name="start_date" id="start_date" class="form-control" required>
+
+            <label>End Date</label>
+            <input type="date" name="end_date" id="end_date" class="form-control">
+
+            <!-- Action Buttons -->
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" onclick="closeEditForm()">Cancel</button>
+            <button type="button" class="btn btn-danger" onclick="deleteInternship()">Delete</button>
+        </form>
+    </div>
+
+    {% if user.is_authenticated and internship_list %}
+        {% for internship in internship_list %}
+            <div class="internship-item">
+                <h5>{{ internship.company_name }}</h5>
+                <p>{{ internship.role }} ({{ internship.start_date }} - {{ internship.end_date }})</p>
+                <span class="edit-icon" onclick="editInternship('{{ internship.id }}', '{{ internship.company_name|escapejs }}', '{{ internship.role|escapejs }}', '{{ internship.start_date|date:'Y-m-d' }}', '{{ internship.end_date|date:'Y-m-d' }}')">
+                    <i class="bi bi-pencil"></i>
+                </span>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No internships added yet.</p>
+    {% endif %}
+</div>
+
+<div id="skills" class="section" style="display: none;">
+    <h3>Skills</h3>
+    <button class="btn btn-primary" onclick="showSkillForm()">+ Add Skill</button>
+
+    <div id="skillForm" style="display: none;">
+    <form method="POST">
+        {% csrf_token %}
+        <label>Skill Name</label>
+        <input type="text" name="skill_name" class="form-control" required>
+        <button type="submit" class="btn btn-success">Add Skill</button>
+    </form>
+    </div>
+    <!-- Display Skills -->
+    <ul>
+        {% for skill in skills_list %}
+            <li>{{ skill.name }}</li>
+        {% empty %}
+            <p>No skills added yet.</p>
+        {% endfor %}
+    </ul>
+</div>
+
+                    
+                    
+                
+                    
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+  function editField(field) {
+    let span = document.getElementById(field);
+    let currentValue = span.dataset.value || span.innerText.trim();
+
+    // Create an input field
+    let input = document.createElement("input");
+    input.type = "text";
+    input.value = currentValue;
+    input.id = `${field}-input`;
+
+    // Create a Save button
+    let saveButton = document.createElement("button");
+    saveButton.innerText = "Save";
+    saveButton.className = "btn-save";
+    saveButton.onclick = function () { saveField(field); };
+
+    // Create a Cancel button
+    let cancelButton = document.createElement("button");
+    cancelButton.innerText = "Cancel";
+    cancelButton.className = "btn-cancel";
+    cancelButton.onclick = function () { cancelEdit(field, currentValue); };
+
+    // Remove existing edit button
+    let editButton = span.parentElement.querySelector(".edit-btn");
+    if (editButton) {
+        editButton.style.display = "none"; // Hide edit button instead of removing
+    }
+
+    // Clear existing text and add input + buttons
+    span.dataset.value = currentValue; // Store original value
+    span.innerHTML = "";  
+    span.appendChild(input);
+    span.appendChild(saveButton);
+    span.appendChild(cancelButton);
+}
+
+// Function to restore previous value when canceled
+function cancelEdit(field, originalValue) {
+    let span = document.getElementById(field);
+    
+    // Reset the field and re-show the "Edit" button
+    span.innerHTML = `${originalValue}`;
+    span.dataset.value = originalValue;
+
+    // Restore the edit button
+    let editButton = span.parentElement.querySelector(".edit-btn");
+    if (editButton) {
+        editButton.style.display = "inline"; // Show the edit button again
+    }
+}
+
+function saveField(field) {
+    let newValue = document.getElementById(`${field}-input`).value;
+    let span = document.getElementById(field);
+    
+    // Update the field and restore the "Edit" button
+    span.innerHTML = `${newValue}`;
+    span.dataset.value = newValue;
+
+    let editButton = span.parentElement.querySelector(".edit-btn");
+    if (editButton) {
+        editButton.style.display = "inline"; // Show edit button again
+    }
+
+    fetch("/edit_profile/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")  
+        },
+        body: JSON.stringify({ field: field, value: newValue })  
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            alert(data.message);  
+        } else {
+            alert("Error: " + data.message);  
+        }
+    })
+    .catch(error => console.error("Fetch error:", error));
+}
+
+    // Function to get CSRF Token for Django
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            let cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                if (cookie.startsWith(name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+        document.getElementById("profile-upload").addEventListener("change", function() {
+            let formData = new FormData();
+            formData.append("profile_picture", this.files[0]);
+
+            fetch("/upload_profile_picture/", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    document.getElementById("profile-img").src = data.image_url;
+                }
+            });
+        });
+        function addSummary() {
+    let summaryContainer = document.getElementById("summary-text");
+
+    // Check if an input field already exists (prevent duplicates)
+    if (document.getElementById("summary-input")) return;
+
+    // Create input field for summary
+    let input = document.createElement("textarea");
+    input.id = "summary-input";
+    input.className = "form-control";
+    input.placeholder = "Enter your summary";
+
+    // Create Save button
+    let saveButton = document.createElement("button");
+    saveButton.innerText = "Save";
+    saveButton.className = "btn btn-success mt-2";
+    saveButton.onclick = function () { saveSummary(); };
+
+    // Clear existing content and append new input + button
+    summaryContainer.innerHTML = "";
+    summaryContainer.appendChild(input);
+    summaryContainer.appendChild(saveButton);
+}
+
+function saveSummary() {
+    let input = document.getElementById("summary-input").value;
+    let summaryContainer = document.getElementById("summary-text");
+
+    if (!input.trim()) {
+        alert("Summary cannot be empty!");
+        return;
+    }
+
+    // Update UI
+    summaryContainer.innerHTML = input;
+
+    // Send data to backend
+    fetch("/edit_profile/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({ field: "summary", value: input })  
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            alert("Summary updated successfully!");
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch(error => console.error("Fetch error:", error));
+}
+
+
+// Function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+        let cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i].trim();
+            if (cookie.startsWith(name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith("csrftoken=")) {
+                cookieValue = cookie.substring("csrftoken=".length, cookie.length);
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+
+
+function showSection(sectionId) {
+    // Hide all sections inside `.main-content`
+    document.querySelectorAll(".main-content .details-card, .main-content .section").forEach(section => {
+        section.style.display = "none";
+    });
+
+    // Show the selected section
+    let section = document.getElementById(sectionId);
+    if (section) {
+        section.style.display = "block";
+    }
+}
+
+function showForm() {
+    document.getElementById("educationForm").style.display = "block";
+    document.getElementById("educationFormTitle").innerText = "Add Education";
+    document.getElementById("educationForm").reset(); // Corrected form reset
+    document.getElementById("education_id").value = ""; // Ensure it's empty for a new entry
+}
+
+function hideForm() {
+    document.getElementById("educationForm").style.display = "none";
+}
+
+function formatDate(dateString) {
+    if (!dateString) return "";
+    let date = new Date(dateString);
+    return date.toISOString().split("T")[0]; // Converts to YYYY-MM-DD
+}
+
+function openEditModal(id, institution_name, degree, field_of_study, start_date, end_date, grade) {
+    document.getElementById("edit_education_id").value = id;
+    document.getElementById("edit_institution_name").value = institution_name;
+    document.getElementById("edit_degree").value = degree;
+    document.getElementById("edit_field_of_study").value = field_of_study;
+    document.getElementById("edit_grade").value = grade;
+
+    document.getElementById("edit_start_date").value = formatDate(start_date);
+    document.getElementById("edit_end_date").value = formatDate(end_date);
+
+    var editModal = new bootstrap.Modal(document.getElementById("editEducationModal"));
+    editModal.show();
+}
+
+function getCSRFToken() {
+    return document.querySelector("[name=csrfmiddlewaretoken]").value;
+}
+
+function deleteEducation() {
+    let educationId = document.getElementById("edit_education_id").value;
+
+    if (!educationId) {
+        alert("Education ID is missing. Please try again.");
+        return;
+    }
+
+    if (confirm("Are you sure you want to delete this education record?")) {
+        fetch(`/delete-education/${educationId}/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("Education record deleted successfully.");
+                location.reload();  // ✅ Refresh the page to reflect changes
+            } else {
+                alert("Error deleting education record.");
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    }
+}
+
+
+function showInternshipSection() {
+    var section = document.getElementById("internship-work");
+    section.style.display = "block"; // Ensure the main section is visible
+}
+
+function showInternshipForm() {
+    var form = document.getElementById("internshipForm");
+    form.style.display = "block"; // Ensure the form is always visible
+}
+
+function showSkillForm(){
+    var form=document.getElementById("skillForm");
+    if (form.style.display==="none" || form.style.display===""){
+        form.style.display="block";
+    }else{
+        form.style.display="none";
+
+    }
+    
+}
+
+function editInternship(id, companyName, role, startDate, endDate) {
+    document.getElementById("internshipForm").style.display = "block";
+
+    document.getElementById("company_name").value = companyName;
+    document.getElementById("role").value = role;
+    document.getElementById("start_date").value = startDate;
+    document.getElementById("end_date").value = endDate;
+
+    let hiddenIdField = document.getElementById("internship_id");
+    if (!hiddenIdField) {
+        hiddenIdField = document.createElement("input");
+        hiddenIdField.type = "hidden";
+        hiddenIdField.id = "internship_id";
+        hiddenIdField.name = "internship_id";
+        document.querySelector("#internshipForm form").appendChild(hiddenIdField);
+    }
+    hiddenIdField.value = id;
+}
+
+document.querySelector("#internshipForm form").addEventListener("submit", function(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    let formData = new FormData(this);
+    fetch("/save-internship/", {
+        method: "POST",
+        body: formData,
+        headers: {
+            "X-CSRFToken": getCSRFToken(),
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert("Failed to save internship: " + data.error);
+        }
+    })
+    .catch(error => console.error("Error:", error));
+});
+
+
+function deleteInternship() {
+    let internshipId = document.getElementById("internship_id").value;
+
+    if (!internshipId) {
+        alert("No internship selected for deletion.");
+        return;
+    }
+
+    if (confirm("Are you sure you want to delete this internship?")) {
+        fetch(`/delete-internship/${internshipId}/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCSRFToken(), // Get CSRF token
+                "Content-Type": "application/json"
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Internship deleted successfully!");
+                location.reload(); // Reload the page to update the internship list
+            } else {
+                alert("Failed to delete internship: " + data.error);
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while deleting the internship.");
+        });
+    }
+}
+
+// Function to get CSRF token from cookies
+function getCSRFToken() {
+    let name = "csrftoken=";
+    let decodedCookie = decodeURIComponent(document.cookie);
+    let cookieArray = decodedCookie.split(";");
+    for (let i = 0; i < cookieArray.length; i++) {
+        let cookie = cookieArray[i].trim();
+        if (cookie.indexOf(name) == 0) {
+            return cookie.substring(name.length, cookie.length);
+        }
+    }
+    return "";
+}
+
+
+
+
+
+
+ </script>
 </body>
 </html>
