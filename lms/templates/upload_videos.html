@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Videos</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- jQuery Formset -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.formset/1.3/jquery.formset.min.js"></script>
+</head>
+<body>
+    <!-- Navbar --> 
+    <nav class="navbar navbar-expand-lg" style="background-color: hwb(113 69% 8%);">
+        <div class="container-fluid">
+          <a class="navbar-brand text-white" href="#" style="font-weight: bold;">materials</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon" style="color: white;"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+              <li class="nav-item">
+                <a class="nav-link text-white active" aria-current="page" href="{% url 'add_content'%}" style="font-size: 16px;">Back </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link text-white active" aria-current="page" href="{% url 'teacher_dashboard'%}" style="font-size: 16px;">Home </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link text-white" href="#" style="font-size: 16px;">About</a>
+              </li>
+              
+              <li class="nav-item">
+                <a class="nav-link text-white" href="#" style="font-size: 16px;">Contact          </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    {% for i in messages %}
+      <div class="alert alert-primary">
+        <strong>{{i}}</strong> 
+      </div>
+    {% endfor %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="text-center">Upload Videos</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ formset.management_form }}
+                            <div id="formset">
+                                {% for form in formset %}
+                                    <div class="form border p-3 mb-3 rounded shadow-sm">
+                                        {{ form.as_p }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <button type="button" id="add-form" class="btn btn-secondary"><a class="nav-link active" href="#">Home</a></button>
+                                <button type="button" id="add-form" class="btn btn-secondary"><a class="nav-link active" href="{% url 'video_list' %}"> View All Uploaded videos</a></button>
+                                <button type="submit" class="btn btn-primary">Upload Videos</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Make the formset dynamic with jQuery Formset
+        $('#formset').formset({
+            addText: 'Add Another Video',
+            deleteText: 'Remove',
+            prefix: '{{ formset.prefix }}' // Preserves Django formset prefix
+        });
+    </script>
+</body>
+</html>

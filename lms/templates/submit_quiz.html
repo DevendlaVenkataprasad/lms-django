@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Result</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f8ff; /* Light base color */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <body>
+        
+    <div class="card text-center" style="width: 30rem;">
+        <div class="card-body">
+            <h2 class="card-title text-success">Quiz Completed!</h2>
+            <p class="card-text fs-4 mt-3">
+                Your score: <span class="fw-bold">{{ score }}</span> out of <span class="fw-bold">{{ total_marks }}</span>
+            </p>
+            <p class="card-text fs-5 text-secondary">
+                Percentage: <span class="fw-bold">{{ percentage }}%</span>
+            </p>
+            
+            
+            <a href="{% url 'quiz_list'%}" class="btn btn-primary mt-4">Back to Quiz List</a>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Available Quizzes</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <body>
+    <nav class="navbar navbar-expand-lg" style="background-color: hwb(97 63% 11%);">
+      <div class="container-fluid">
+        <a class="navbar-brand text-white" href="#" style="font-weight: bold;">materials</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon" style="color: white;"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link text-white active" aria-current="page" href="{% url 'view_all'%}" style="font-size: 16px;">Back </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white active" aria-current="page" href="{% url 'teacher_dashboard'%}" style="font-size: 16px;">Home </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="#" style="font-size: 16px;">About</a>
+            </li>
+            
+            <li class="nav-item">
+              <a class="nav-link text-white" href="#" style="font-size: 16px;">Contact          </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Available Quizzes</h1>
+        
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="list-group">
+                    {% for quiz in quizzes %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center 
+                            {% cycle 'bg-white' 'bg-light' %}">
+                            <span class="fw-bold">{{ quiz.title }}</span>
+                            <a href="{% url 'attempt_quiz' quiz.id %}" class="btn btn-primary btn-sm">
+                                OPEN
+                            </a>
+                        </div>
+                    {% empty %}
+                        <div class="alert alert-warning text-center" role="alert">
+                            No quizzes available.
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (Optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

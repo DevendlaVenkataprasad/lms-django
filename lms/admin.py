@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Student, Teacher, Education, Internship, Skill
+from .models import Document,Video,Question,Quiz,Option,Student, Teacher, Education, Internship, Skill
 
 class EducationInline(admin.TabularInline):  
     model = Education
@@ -45,3 +45,28 @@ class TeacherAdmin(admin.ModelAdmin):
         return obj.user.email
     get_email.admin_order_field = "user__email"
     get_email.short_description = "Email"
+
+
+
+@admin.register(Video)
+class VideoAdmin(admin.ModelAdmin):
+    list_display = ['title', 'video_file']
+admin.site.register(Document)
+
+
+from .models import Video,Document,Quiz, Question, Option
+
+# Register Quiz model
+@admin.register(Quiz)
+class QuizAdmin(admin.ModelAdmin):
+    list_display = ('title', 'description')  # Adjust this according to your model fields
+
+# Register Question model
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ('question_text', 'marks', 'quiz')     # Use actual field names from the Question model
+
+# Register Option model
+@admin.register(Option)
+class OptionAdmin(admin.ModelAdmin):
+    list_display = ('question', 'option_a', 'option_b', 'option_c', 'option_d')  # Adjust this according to your Option model fields
