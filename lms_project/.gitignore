@@ -1,0 +1,30 @@
+# Ignore Python cache and compiled files
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+
+# VS Code settings
+.vscode/
+
+# Django media files
+media/*
+!media/course_thumbnails/*  # Keep course thumbnails if you want
+
+# Database and secrets
+db.sqlite3
+.env
+
+# Migrations cache
+**/migrations/*.pyc
+**/migrations/__pycache__/
+
+# Ignore large videos and other media unless specifically tracked
+*.mp4
+*.pptx
+*.pdf
+*.docx
+*.csv
+
+# Ignore Git LFS placeholder files
+*.lfs
