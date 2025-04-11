@@ -20,6 +20,14 @@ import os
 from django.contrib import messages
 from .models import Video,Document,Quiz, Question, Option
 from .forms import VideoFormSet,DocumentForm
+
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Course, Enrollment, CourseContent
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from .models import Course
 # Login View
 def login_view(request):
     if request.method == "POST":
@@ -189,11 +197,7 @@ def reset_password_view(request, user_id, token):
 # Home Page
 def home_view(request):
     return render(request, "home.html")
-def student_dashboard_view(request):
-    return render(request, "student_dashboard.html")
 
-def teacher_dashboard_view(request):
-    return render(request, "teacher_dashboard.html")
 from django.http import JsonResponse
 
 def chatbot_response(request):
@@ -346,7 +350,7 @@ def edit_education(request):
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Student, Teacher, Education, Internship, Skill
+from .models import Student, Teacher, Education, Internship, Skill,StudentAnswer
 
 @login_required
 def profile_view(request):
@@ -544,74 +548,93 @@ def upload_videos(request):
     return render(request, 'upload_videos.html', {'formset': formset})
 
 
+# views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from .models import CourseContent, Quiz, Question, Option
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import CourseContent, Quiz, Question, Option
 
 
-def create_quiz(request):
+def create_quiz(request, course_content_id):
+    course_content = get_object_or_404(CourseContent, id=course_content_id)
+
     if request.method == 'POST':
         quiz_title = request.POST.get('quiz_title')
         quiz_description = request.POST.get('quiz_description')
-        quiz = Quiz.objects.create(title=quiz_title, description=quiz_description)
+        quiz = Quiz.objects.create(
+            course_content=course_content,
+            title=quiz_title,
+            description=quiz_description
+        )
 
         questions = request.POST.getlist('question[]')
         options = request.POST.getlist('option[]')
-        correct_options = request.POST.getlist('correct_option[]')  # Now correct option is A, B, C, D
+        correct_options = request.POST.getlist('correct_option[]')
 
         for i, question_text in enumerate(questions):
-            # Create Question object without options
             question = Question.objects.create(
                 quiz=quiz,
                 question_text=question_text,
-                marks=1  # You can adjust the marks as needed
+                marks=1
             )
 
-            # Get options for the current question
-            option_a = options[i * 4 + 0] if options[i * 4 + 0] else "Default Option A"
-            option_b = options[i * 4 + 1] if options[i * 4 + 1] else "Default Option B"
-            option_c = options[i * 4 + 2] if options[i * 4 + 2] else "Default Option C"
-            option_d = options[i * 4 + 3] if options[i * 4 + 3] else "Default Option D"
-            correct_option = correct_options[i]  # 'A', 'B', 'C', 'D'
+            option_a = options[i * 4 + 0]
+            option_b = options[i * 4 + 1]
+            option_c = options[i * 4 + 2]
+            option_d = options[i * 4 + 3]
+            correct_option = correct_options[i]
 
-            # Create Option object and associate it with the current question
             Option.objects.create(
                 question=question,
                 option_a=option_a,
                 option_b=option_b,
                 option_c=option_c,
                 option_d=option_d,
-                correct_option=correct_option  # No need to convert
+                correct_option=correct_option
             )
 
-        return redirect('quiz_list')
+        return redirect('view_course', course_id=course_content.course.id)
 
-    return render(request, 'create_quiz.html')
 
-    
+    return render(request, 'create_quiz.html', {'course_content': course_content})
+from django.shortcuts import render, get_object_or_404
+from .models import Quiz, Question
+
+from django.shortcuts import render, get_object_or_404
+from .models import Quiz, Question
 def attempt_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
-    questions = quiz.questions.all()  # Get all the questions for this quiz
+    questions = quiz.questions.all()
 
-    # Fetch options for each question
     for question in questions:
-        question.options = question.option_set.all()  # Fetch related options for the question
+        question.options = question.option_set.all()
     
     if request.method == 'POST':
         score = 0
         total_marks = 0 
         for question in questions:
-            selected_answer = request.POST.get(f"question_{question.id}")  # Selected answer from form
-            
-            # Fetch the correct option from the associated options
-            correct_option_obj = question.option_set.first()  # Get the first option
-            if selected_answer.upper() == correct_option_obj.correct_option.upper():
+            selected_answer = request.POST.get(f"question_{question.id}")
+            correct_option_obj = question.option_set.first()
+            if selected_answer and selected_answer.upper() == correct_option_obj.correct_option.upper():
                 score += question.marks
             total_marks += question.marks
+        
         percentage = (score / total_marks) * 100 if total_marks > 0 else 0
         percentage = round(percentage, 2)
-        return render(request, 'submit_quiz.html', {'score': score, 'quiz': quiz,'percentage': percentage,'total_marks': total_marks})
+
+        # ✅ Get the course_id safely
+        course_id = quiz.course_content.course.id if quiz.course_content and quiz.course_content.course else None
+
+        return render(request, 'submit_quiz.html', {
+            'score': score,
+            'quiz': quiz,
+            'percentage': percentage,
+            'total_marks': total_marks,
+            'course_id': course_id  # ✅ Now passed correctly
+        })
 
     return render(request, 'attempt_quiz.html', {'quiz': quiz, 'questions': questions})
-
-
 
 
 
@@ -620,39 +643,135 @@ def quiz_list(request):
     quizzes = Quiz.objects.all()  # Get all quizzes from the database
     return render(request, 'quiz_list.html', {'quizzes': quizzes})
 
-
 def submit_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
     questions = quiz.questions.all()
 
     score = 0
-    total_marks = 0  # Initialize total_marks
+    total_marks = 0
 
     for question in questions:
-        selected_answer = request.POST.get(f"question_{question.id}")  # 'A', 'B', 'C', or 'D'
-        
-        # Fetch the correct answer from the `Option` model
-        correct_answer = question.option_set.first().correct_option  # Already stored as 'A', 'B', 'C', 'D'
+        selected_answer = request.POST.get(f"question_{question.id}")
+        correct_answer = question.option_set.first().correct_option
 
         if selected_answer == correct_answer:
             score += question.marks
-        
-        total_marks += question.marks  # Add to total_marks
+        total_marks += question.marks
 
     percentage = (score / total_marks) * 100 if total_marks > 0 else 0
-    percentage = round(percentage, 2)  # Round the percentage to 2 decimal places
+    percentage = round(percentage, 2)
 
-    # Print to check if values are passed correctly
-    print(f"Score: {score}, Total Marks: {total_marks}, Percentage: {percentage}")
+    # ✅ Get course_id from the quiz > course_content > course
+    course_id = quiz.course_content.course.id
 
     return render(request, 'submit_quiz.html', {
         'score': score,
         'quiz': quiz,
-        'percentage': percentage,  # Pass the calculated percentage
-        'total_marks': total_marks  # Pass total_marks to show in the template
+        'percentage': percentage,
+        'total_marks': total_marks,
+        'course_id': course_id  # Now defined properly
     })
 
 
 
 
 
+@login_required
+def teacher_dashboard_view(request):
+    teacher = request.user
+    courses = Course.objects.filter(teacher=teacher)
+    print("Courses for teacher:", courses)  # ✅ Make sure this is here
+    return render(request, 'teacher_dashboard.html', {
+        'courses': courses,
+        'teacher_name': teacher.first_name
+    })
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+from .models import Course
+
+@login_required
+def add_course(request):
+    if request.method == 'POST':
+        title = request.POST['title']
+        description = request.POST['description']
+        thumbnail = request.FILES.get('thumbnail')  # Get uploaded file if any
+
+        course = Course(
+            title=title,
+            description=description,
+            teacher=request.user
+        )
+
+        if thumbnail:
+            course.thumbnail = thumbnail
+
+        course.save()
+        return redirect('teacher_dashboard')
+
+    return render(request, 'add_course.html')
+
+
+
+@login_required
+def add_course_content(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    if request.method == 'POST':
+        title = request.POST['title']
+        video = request.FILES.get('video')
+        material = request.FILES.get('material')
+        description = request.POST.get('description')
+        CourseContent.objects.create(course=course, title=title, video=video, material=material, description=description)
+        return redirect('teacher_dashboard')
+    return render(request, 'add_course_content.html', {'course': course})
+
+@login_required
+def student_dashboard_view(request):
+    courses = Course.objects.all()
+    enrollments = Enrollment.objects.filter(student=request.user)
+    enrolled_courses = [e.course.id for e in enrollments]
+    return render(request, 'student_dashboard.html', {'courses': courses, 'enrolled_courses': enrolled_courses})
+
+@login_required
+def enroll_course(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    Enrollment.objects.get_or_create(student=request.user, course=course)
+    return redirect('student_dashboard')
+
+@login_required
+def view_course(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    content = CourseContent.objects.filter(course=course).order_by('id')
+    return render(request, 'view_course.html', {'course': course, 'content': content})
+
+@login_required
+def view_course_students(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    enrollments = Enrollment.objects.filter(course=course)
+    return render(request, 'course_students.html', {'course': course, 'enrollments': enrollments})
+
+
+from django.contrib import messages
+
+@login_required
+def delete_course_content(request, content_id):
+    content = get_object_or_404(CourseContent, id=content_id)
+    
+    # Optional: Check if the logged-in user is the course teacher
+    if content.course.teacher != request.user:
+        messages.error(request, "You are not authorized to delete this content.")
+        return redirect('teacher_dashboard')
+    
+    course_id = content.course.id
+    content.delete()
+    messages.success(request, "Course content deleted successfully.")
+    return redirect('view_course', course_id=course_id)
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+
+@login_required
+def delete_course(request, course_id):
+    course = get_object_or_404(Course, id=course_id, teacher=request.user)
+    course.delete()
+    return redirect('teacher_dashboard')

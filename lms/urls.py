@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import  document_list,view_all,add_content,upload_videos,video_list,create_quiz,quiz_list,attempt_quiz,submit_quiz,upload_document,save_internship,delete_internship,delete_education,upload_profile_picture,edit_education,edit_profile,update_profile,profile_view,chatbot_response,student_dashboard_view, teacher_dashboard_view,send_otp,home_view,login_view, register_view, logout_view, forgot_password_view,reset_password_view,verify_otp
+from .views import  delete_course,view_course_students,delete_course_content,view_course,enroll_course,add_course_content,add_course,document_list,view_all,add_content,upload_videos,video_list,create_quiz,quiz_list,attempt_quiz,submit_quiz,upload_document,save_internship,delete_internship,delete_education,upload_profile_picture,edit_education,edit_profile,update_profile,profile_view,chatbot_response,student_dashboard_view, teacher_dashboard_view,send_otp,home_view,login_view, register_view, logout_view, forgot_password_view,reset_password_view,verify_otp
 
 urlpatterns = [
     path('login/', login_view, name='login'),
@@ -33,10 +33,22 @@ urlpatterns = [
     path('video-list/', video_list, name='video_list'),
 
     
-    path('create/', create_quiz, name='create_quiz'),
+    path('course_content/<int:course_content_id>/quiz/create/', create_quiz, name='create_quiz'),
     path('quizzes/',quiz_list,name='quiz_list'),
     path('quiz/', quiz_list, name='quiz_list'),  # Add this line
     path('quiz/<int:quiz_id>/attempt/', attempt_quiz, name='attempt_quiz'),
     path('quiz/<int:quiz_id>/submit/', submit_quiz, name='submit_quiz'),  
+
+
+
+    path('add_course/', add_course, name='add_course'),
+    path('course/<int:course_id>/add_content/', add_course_content, name='add_course_content'),
+
+    path('course/<int:course_id>/enroll/', enroll_course, name='enroll_course'),
+    path('course/<int:course_id>/', view_course, name='view_course'),
+    path('content/<int:content_id>/delete/', delete_course_content, name='delete_course_content'),
+    path('course/<int:course_id>/students/', view_course_students, name='course_students'),
+    path('delete_course/<int:course_id>/', delete_course, name='delete_course'),
+
 
 ]

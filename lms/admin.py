@@ -70,3 +70,11 @@ class QuestionAdmin(admin.ModelAdmin):
 @admin.register(Option)
 class OptionAdmin(admin.ModelAdmin):
     list_display = ('question', 'option_a', 'option_b', 'option_c', 'option_d')  # Adjust this according to your Option model fields
+
+
+from django.contrib import admin
+from .models import Course, Enrollment, CourseContent
+
+admin.site.register(Course)
+admin.site.register(Enrollment)
+admin.site.register(CourseContent)

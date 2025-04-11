@@ -1,0 +1,6 @@
+<h3>Enrolled Students in {{ course.title }}</h3>
+<ul>
+  {% for enroll in enrollments %}
+    <li>{{ enroll.student.first_name }} ({{ enroll.student.email }})</li>
+  {% endfor %}
+</ul>

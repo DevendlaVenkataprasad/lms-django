@@ -53,7 +53,7 @@ class Internship(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, null=True, blank=True, related_name="internships")
     company_name = models.CharField(max_length=255)
     role = models.CharField(max_length=255)
-    start_date = models.DateField()
+    start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
@@ -84,9 +84,11 @@ class Document(models.Model):
 
 
 class Quiz(models.Model):
+    course_content = models.ForeignKey('CourseContent', on_delete=models.CASCADE, related_name='quizzes',null=True, blank=True)
     title = models.CharField(max_length=255)
     description = models.TextField()
     marks = models.IntegerField(default=1)  # Ensure this field exists in your model
+    
     # Add any other fields here
 
     def __str__(self):
@@ -123,3 +125,32 @@ class StudentAnswer(models.Model):
         return f"Answer by {self.student} for {self.question}"
 
 
+from django.db import models
+from django.contrib.auth.models import User
+
+class Course(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    num_lectures = models.IntegerField(default=0)
+    thumbnail = models.ImageField(upload_to='course_thumbnails/', blank=True, null=True)  # New
+
+
+    def __str__(self):
+        return self.title
+
+class Enrollment(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+
+class CourseContent(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)  # e.g. "Day 1"
+    video = models.FileField(upload_to='videos/',max_length=255, blank=True, null=True)
+    material = models.FileField(upload_to='materials/',max_length=255, blank=True, null=True)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.course.title} - {self.title}"

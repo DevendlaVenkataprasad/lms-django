@@ -57,4 +57,13 @@ class QuizForm(forms.ModelForm):
     class Meta:
         model = Quiz
         fields = ['title', 'description', 'marks']  # Include the fields you want in the form
-   
+
+
+from django import forms
+from .models import Course
+
+class CourseForm(forms.ModelForm):
+    class Meta:
+        model = Course
+        fields = ['title', 'description', 'num_lectures', 'thumbnail']  # include thumbnail
+  

@@ -1,0 +1,6 @@
+67. Credit Card Fraud Detection using ML: (ML PROJECT)**
+64. Bird Species Classification Using Deep Learning(DL PROJECT)**
+65. Identifying Health Insurance Claim Frauds Using Mixture of Clinical Concepts(ML PROJECT)
+60. Fake Profile Identification in Social Network using Machine Learning and NLP(ML PROJECT)
+58. Identification of Fake Indian Currency using Convolutional Neural Network(DL PROJECT) **
+9. Road Accident Prediction Using Machine Learning(ML) **
