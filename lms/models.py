@@ -145,6 +145,22 @@ class Enrollment(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     enrolled_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def completed_days(self):
+        return StudentCourseProgress.objects.filter(enrollment=self, is_completed=True).count()
+
+    @property
+    def progress_percentage(self):
+        total_contents = CourseContent.objects.filter(course=self.course).count()
+        if total_contents == 0:
+            return 0
+        return (self.completed_days / total_contents) * 100
+
+    @property
+    def is_completed(self):
+        total = CourseContent.objects.filter(course=self.course).count()
+        return self.completed_days == total
+
 class CourseContent(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)  # e.g. "Day 1"
@@ -154,3 +170,16 @@ class CourseContent(models.Model):
 
     def __str__(self):
         return f"{self.course.title} - {self.title}"
+
+
+
+class StudentCourseProgress(models.Model):
+    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
+    course_content = models.ForeignKey(CourseContent, on_delete=models.CASCADE)
+    is_completed = models.BooleanField(default=False)
+    quiz_score = models.FloatField(null=True, blank=True)  # Quiz score for that day's quiz
+
+    def __str__(self):
+        return f"{self.enrollment.student.username} - {self.course_content.title} - {'Completed' if self.is_completed else 'Incomplete'}"
+
+

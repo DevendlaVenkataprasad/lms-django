@@ -737,11 +737,38 @@ def enroll_course(request, course_id):
     Enrollment.objects.get_or_create(student=request.user, course=course)
     return redirect('student_dashboard')
 
+from django.shortcuts import get_object_or_404, render
+from .models import Course, CourseContent, Enrollment, StudentCourseProgress
+
 @login_required
 def view_course(request, course_id):
     course = get_object_or_404(Course, id=course_id)
-    content = CourseContent.objects.filter(course=course).order_by('id')
-    return render(request, 'view_course.html', {'course': course, 'content': content})
+    content = course.coursecontent_set.all().order_by('id')
+
+    is_enrolled = False
+    enrollment = None
+    student_progress = {}
+
+    if hasattr(request.user, 'student'):
+        enrollment = Enrollment.objects.filter(student=request.user, course=course).first()
+        is_enrolled = enrollment is not None
+        
+        if enrollment:
+            # Fetch student progress for each content item
+            for item in content:
+                student_progress[item.id] = item.studentcourseprogress_set.filter(enrollment=enrollment, is_completed=True).exists()
+
+    return render(request, 'view_course.html', {
+        'course': course,
+        'content': content,
+        'is_enrolled': is_enrolled,
+        'enrollment': enrollment,
+        'student_progress': student_progress,
+    })
+
+
+
+
 
 @login_required
 def view_course_students(request, course_id):
@@ -775,3 +802,126 @@ def delete_course(request, course_id):
     course = get_object_or_404(Course, id=course_id, teacher=request.user)
     course.delete()
     return redirect('teacher_dashboard')
+
+
+
+from django.shortcuts import render
+from .models import Enrollment, StudentCourseProgress, StudentAnswer, Quiz,Student
+
+def student_progress_view(request):
+    enrollments = Enrollment.objects.filter(student=request.user)
+
+    progress_data = []
+    for enrollment in enrollments:
+        course = enrollment.course
+        total_days = course.coursecontent_set.count()
+        completed_days = StudentCourseProgress.objects.filter(enrollment=enrollment, is_completed=True).count()
+        progress_percent = int((completed_days / total_days) * 100) if total_days > 0 else 0
+
+        # Quiz average
+        quizzes = Quiz.objects.filter(course_content__course=course)
+        total_score = 0
+        total_quizzes = 0
+        for quiz in quizzes:
+            questions = quiz.questions.all()
+            score = 0
+            for question in questions:
+                try:
+                    answer = StudentAnswer.objects.get(student=request.user, question=question)
+                    if answer.selected_option.correct_option == question.correct_option:
+                        score += question.marks
+                except StudentAnswer.DoesNotExist:
+                    pass
+            if questions.exists():
+                total_score += (score / sum([q.marks for q in questions])) * 100
+                total_quizzes += 1
+
+        quiz_avg = int(total_score / total_quizzes) if total_quizzes > 0 else 0
+
+        status = "Completed" if progress_percent == 100 else "Ongoing"
+
+        progress_data.append({
+           "student": request.user.get_full_name() or request.user.username,
+
+            "course": course.title,
+            "completed_days": f"{completed_days}/{total_days}",
+            "progress": f"{progress_percent}%",
+            "quiz_avg": f"{quiz_avg}%",
+            "status": status,
+        })
+
+    return render(request, 'student_progress.html', {'progress_data': progress_data})
+
+
+from .models import Course, Enrollment, StudentCourseProgress, StudentAnswer, Quiz
+
+def teacher_course_progress_view(request):
+    courses = Course.objects.filter(teacher=request.user)
+    progress_data = []
+
+    for course in courses:
+        enrollments = Enrollment.objects.filter(course=course)
+        total_days = course.coursecontent_set.count()
+
+        for enrollment in enrollments:
+            student = enrollment.student
+            completed_days = StudentCourseProgress.objects.filter(enrollment=enrollment, is_completed=True).count()
+            progress_percent = int((completed_days / total_days) * 100) if total_days > 0 else 0
+
+            # Quiz average
+            quizzes = Quiz.objects.filter(course_content__course=course)
+            total_score = 0
+            total_quizzes = 0
+            for quiz in quizzes:
+                questions = quiz.questions.all()
+                score = 0
+                for question in questions:
+                    try:
+                        answer = StudentAnswer.objects.get(student=student, question=question)
+                        if answer.selected_option.correct_option == question.correct_option:
+                            score += question.marks
+                    except StudentAnswer.DoesNotExist:
+                        pass
+                if questions.exists():
+                    total_score += (score / sum([q.marks for q in questions])) * 100
+                    total_quizzes += 1
+
+            quiz_avg = int(total_score / total_quizzes) if total_quizzes > 0 else 0
+
+            status = "Completed" if progress_percent == 100 else "Ongoing"
+
+            progress_data.append({
+               "student": student.get_full_name() or student.username,
+
+                "course": course.title,
+                "completed_days": f"{completed_days}/{total_days}",
+                "progress": f"{progress_percent}%",
+                "quiz_avg": f"{quiz_avg}%",
+                "status": status,
+            })
+
+    return render(request, 'teacher_progress.html', {'progress_data': progress_data})
+
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import StudentCourseProgress, CourseContent, Enrollment
+
+@login_required
+def mark_as_complete(request, content_id):
+    if request.method == 'POST':
+        course_content = get_object_or_404(CourseContent, id=content_id)
+        
+        try:
+            enrollment = Enrollment.objects.get(student=request.user, course=course_content.course)
+        except Enrollment.DoesNotExist:
+            return redirect('view_course', course_id=course_content.course.id)
+
+        progress, created = StudentCourseProgress.objects.get_or_create(
+            enrollment=enrollment,
+            course_content=course_content
+        )
+
+        progress.is_completed = True
+        progress.save()
+
+    return redirect('view_course', course_id=course_content.course.id)

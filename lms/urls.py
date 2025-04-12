@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import  delete_course,view_course_students,delete_course_content,view_course,enroll_course,add_course_content,add_course,document_list,view_all,add_content,upload_videos,video_list,create_quiz,quiz_list,attempt_quiz,submit_quiz,upload_document,save_internship,delete_internship,delete_education,upload_profile_picture,edit_education,edit_profile,update_profile,profile_view,chatbot_response,student_dashboard_view, teacher_dashboard_view,send_otp,home_view,login_view, register_view, logout_view, forgot_password_view,reset_password_view,verify_otp
+from .views import   mark_as_complete,student_progress_view,teacher_course_progress_view,delete_course,view_course_students,delete_course_content,view_course,enroll_course,add_course_content,add_course,document_list,view_all,add_content,upload_videos,video_list,create_quiz,quiz_list,attempt_quiz,submit_quiz,upload_document,save_internship,delete_internship,delete_education,upload_profile_picture,edit_education,edit_profile,update_profile,profile_view,chatbot_response,student_dashboard_view, teacher_dashboard_view,send_otp,home_view,login_view, register_view, logout_view, forgot_password_view,reset_password_view,verify_otp
 
 urlpatterns = [
     path('login/', login_view, name='login'),
@@ -49,6 +49,8 @@ urlpatterns = [
     path('content/<int:content_id>/delete/', delete_course_content, name='delete_course_content'),
     path('course/<int:course_id>/students/', view_course_students, name='course_students'),
     path('delete_course/<int:course_id>/', delete_course, name='delete_course'),
-
+    path('student/progress/', student_progress_view, name='student_progress'),
+    path('teacher/progress/', teacher_course_progress_view, name='teacher_progress'),
+    path('course/mark-complete/<int:content_id>/', mark_as_complete, name='mark_as_complete'),
 
 ]
