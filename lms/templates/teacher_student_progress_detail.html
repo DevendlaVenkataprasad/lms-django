@@ -1,0 +1,15 @@
+<h2>Progress of {{ student.get_full_name|default:student.username }} in {{ course.title }}</h2>
+<table>
+  <tr>
+    <th>Day</th>
+    <th>Status</th>
+    <th>Quiz Score</th>
+  </tr>
+  {% for item in progress_data %}
+  <tr>
+    <td>{{ item.title }}</td>
+    <td>{% if item.is_completed %}✅ Completed{% else %}❌ Incomplete{% endif %}</td>
+    <td>{% if item.quiz_score is not None %}{{ item.quiz_score }}%{% else %}-{% endif %}</td>
+
+  {% endfor %}
+</table>

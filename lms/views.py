@@ -603,46 +603,65 @@ from .models import Quiz, Question
 
 from django.shortcuts import render, get_object_or_404
 from .models import Quiz, Question
+@login_required
 def attempt_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
     questions = quiz.questions.all()
 
     for question in questions:
         question.options = question.option_set.all()
-    
+
     if request.method == 'POST':
         score = 0
         total_marks = 0 
+
         for question in questions:
             selected_answer = request.POST.get(f"question_{question.id}")
-            correct_option_obj = question.option_set.first()
-            if selected_answer and selected_answer.upper() == correct_option_obj.correct_option.upper():
+            correct_option = question.correct_option
+
+            if selected_answer and selected_answer.upper() == correct_option.upper():
                 score += question.marks
             total_marks += question.marks
-        
+
         percentage = (score / total_marks) * 100 if total_marks > 0 else 0
         percentage = round(percentage, 2)
 
-        # ✅ Get the course_id safely
-        course_id = quiz.course_content.course.id if quiz.course_content and quiz.course_content.course else None
+        # ✅ Save progress here!
+        course_content = quiz.course_content
+        course = course_content.course
+        student = request.user
+
+        try:
+            enrollment = Enrollment.objects.get(course=course, student=student)
+        except Enrollment.DoesNotExist:
+            enrollment = None
+
+        if enrollment:
+            progress, created = StudentCourseProgress.objects.get_or_create(
+                enrollment=enrollment,
+                course_content=course_content
+            )
+            progress.quiz_score = percentage
+            progress.save()
+            print("✅ Progress saved:", percentage)
 
         return render(request, 'submit_quiz.html', {
             'score': score,
             'quiz': quiz,
             'percentage': percentage,
             'total_marks': total_marks,
-            'course_id': course_id  # ✅ Now passed correctly
+            'course_id': course.id
         })
 
     return render(request, 'attempt_quiz.html', {'quiz': quiz, 'questions': questions})
-
-
 
 
 def quiz_list(request):
     quizzes = Quiz.objects.all()  # Get all quizzes from the database
     return render(request, 'quiz_list.html', {'quizzes': quizzes})
 
+from .models import StudentCourseProgress, Enrollment
+@login_required
 def submit_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
     questions = quiz.questions.all()
@@ -652,7 +671,7 @@ def submit_quiz(request, quiz_id):
 
     for question in questions:
         selected_answer = request.POST.get(f"question_{question.id}")
-        correct_answer = question.option_set.first().correct_option
+        correct_answer = question.correct_option  # ✅ FIXED
 
         if selected_answer == correct_answer:
             score += question.marks
@@ -661,17 +680,30 @@ def submit_quiz(request, quiz_id):
     percentage = (score / total_marks) * 100 if total_marks > 0 else 0
     percentage = round(percentage, 2)
 
-    # ✅ Get course_id from the quiz > course_content > course
-    course_id = quiz.course_content.course.id
+    course_content = quiz.course_content
+    course = course_content.course
+    student = request.user
+
+    try:
+        enrollment = Enrollment.objects.get(course=course, student=student)
+    except Enrollment.DoesNotExist:
+        enrollment = None
+
+    if enrollment:
+        progress, created = StudentCourseProgress.objects.get_or_create(
+            enrollment=enrollment,
+            course_content=course_content
+        )
+        progress.quiz_score = percentage
+        progress.save()
 
     return render(request, 'submit_quiz.html', {
         'score': score,
         'quiz': quiz,
         'percentage': percentage,
         'total_marks': total_marks,
-        'course_id': course_id  # Now defined properly
+        'course_id': course.id
     })
-
 
 
 
@@ -804,45 +836,28 @@ def delete_course(request, course_id):
     return redirect('teacher_dashboard')
 
 
-
 from django.shortcuts import render
-from .models import Enrollment, StudentCourseProgress, StudentAnswer, Quiz,Student
+from .models import Enrollment, StudentCourseProgress
 
 def student_progress_view(request):
     enrollments = Enrollment.objects.filter(student=request.user)
-
     progress_data = []
+
     for enrollment in enrollments:
         course = enrollment.course
         total_days = course.coursecontent_set.count()
         completed_days = StudentCourseProgress.objects.filter(enrollment=enrollment, is_completed=True).count()
         progress_percent = int((completed_days / total_days) * 100) if total_days > 0 else 0
 
-        # Quiz average
-        quizzes = Quiz.objects.filter(course_content__course=course)
-        total_score = 0
-        total_quizzes = 0
-        for quiz in quizzes:
-            questions = quiz.questions.all()
-            score = 0
-            for question in questions:
-                try:
-                    answer = StudentAnswer.objects.get(student=request.user, question=question)
-                    if answer.selected_option.correct_option == question.correct_option:
-                        score += question.marks
-                except StudentAnswer.DoesNotExist:
-                    pass
-            if questions.exists():
-                total_score += (score / sum([q.marks for q in questions])) * 100
-                total_quizzes += 1
-
-        quiz_avg = int(total_score / total_quizzes) if total_quizzes > 0 else 0
+        # ✅ Fetch quiz scores from StudentCourseProgress
+        progress_records = StudentCourseProgress.objects.filter(enrollment=enrollment).exclude(quiz_score__isnull=True)
+        quiz_scores = [p.quiz_score for p in progress_records]
+        quiz_avg = round(sum(quiz_scores) / len(quiz_scores)) if quiz_scores else 0
 
         status = "Completed" if progress_percent == 100 else "Ongoing"
 
         progress_data.append({
-           "student": request.user.get_full_name() or request.user.username,
-
+            "student": request.user.get_full_name() or request.user.username,
             "course": course.title,
             "completed_days": f"{completed_days}/{total_days}",
             "progress": f"{progress_percent}%",
@@ -852,8 +867,8 @@ def student_progress_view(request):
 
     return render(request, 'student_progress.html', {'progress_data': progress_data})
 
-
-from .models import Course, Enrollment, StudentCourseProgress, StudentAnswer, Quiz
+from django.shortcuts import render
+from .models import Course, Enrollment, StudentCourseProgress
 
 def teacher_course_progress_view(request):
     courses = Course.objects.filter(teacher=request.user)
@@ -868,31 +883,15 @@ def teacher_course_progress_view(request):
             completed_days = StudentCourseProgress.objects.filter(enrollment=enrollment, is_completed=True).count()
             progress_percent = int((completed_days / total_days) * 100) if total_days > 0 else 0
 
-            # Quiz average
-            quizzes = Quiz.objects.filter(course_content__course=course)
-            total_score = 0
-            total_quizzes = 0
-            for quiz in quizzes:
-                questions = quiz.questions.all()
-                score = 0
-                for question in questions:
-                    try:
-                        answer = StudentAnswer.objects.get(student=student, question=question)
-                        if answer.selected_option.correct_option == question.correct_option:
-                            score += question.marks
-                    except StudentAnswer.DoesNotExist:
-                        pass
-                if questions.exists():
-                    total_score += (score / sum([q.marks for q in questions])) * 100
-                    total_quizzes += 1
-
-            quiz_avg = int(total_score / total_quizzes) if total_quizzes > 0 else 0
+            # ✅ Fetch quiz scores from StudentCourseProgress
+            progress_records = StudentCourseProgress.objects.filter(enrollment=enrollment).exclude(quiz_score__isnull=True)
+            quiz_scores = [p.quiz_score for p in progress_records]
+            quiz_avg = round(sum(quiz_scores) / len(quiz_scores)) if quiz_scores else 0
 
             status = "Completed" if progress_percent == 100 else "Ongoing"
 
             progress_data.append({
-               "student": student.get_full_name() or student.username,
-
+                "student": student.get_full_name() or student.username,
                 "course": course.title,
                 "completed_days": f"{completed_days}/{total_days}",
                 "progress": f"{progress_percent}%",
@@ -925,3 +924,43 @@ def mark_as_complete(request, content_id):
         progress.save()
 
     return redirect('view_course', course_id=course_content.course.id)
+
+@login_required
+def teacher_course_list_view(request):
+    courses = Course.objects.filter(teacher=request.user)
+    return render(request, 'teacher_progress_courses.html', {'courses': courses})
+@login_required
+def enrolled_students_view(request, course_id):
+    course = get_object_or_404(Course, id=course_id, teacher=request.user)
+    enrollments = Enrollment.objects.filter(course=course)
+    return render(request, 'teacher_progress_students.html', {
+        'course': course,
+        'enrollments': enrollments
+    })
+
+@login_required
+def student_course_progress_view(request, course_id, student_id):
+    course = get_object_or_404(Course, id=course_id, teacher=request.user)
+    student = get_object_or_404(User, id=student_id)
+    enrollment = get_object_or_404(Enrollment, course=course, student=student)
+    
+    content_list = CourseContent.objects.filter(course=course)
+    progress_data = []
+
+    for content in content_list:
+        progress = StudentCourseProgress.objects.filter(
+            enrollment=enrollment,
+            course_content=content
+        ).first()
+
+        progress_data.append({
+            "title": content.title,
+            "is_completed": progress.is_completed if progress else False,
+            "quiz_score": progress.quiz_score if progress else None,
+        })
+
+    return render(request, 'teacher_student_progress_detail.html', {
+        'student': student,
+        'course': course,
+        'progress_data': progress_data,
+    })

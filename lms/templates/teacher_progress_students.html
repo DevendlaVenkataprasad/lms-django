@@ -1,0 +1,10 @@
+<h2>Students in {{ course.title }}</h2>
+<ul>
+  {% for enrollment in enrollments %}
+    <li><a href="{% url 'student_course_progress' course.id enrollment.student.id %}">
+      {{ enrollment.student.get_full_name|default:enrollment.student.username }}
+    </a></li>
+  {% empty %}
+    <li>No students enrolled in this course.</li>
+  {% endfor %}
+</ul>
