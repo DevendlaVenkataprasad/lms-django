@@ -707,16 +707,32 @@ def submit_quiz(request, quiz_id):
 
 
 
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.shortcuts import render
+from .models import Course
 
 @login_required
 def teacher_dashboard_view(request):
     teacher = request.user
+    query = request.GET.get('q')  # Capture search input
+
+    # Get courses created by the teacher
     courses = Course.objects.filter(teacher=teacher)
-    print("Courses for teacher:", courses)  # ✅ Make sure this is here
+
+    # Apply search filtering if query exists
+    if query:
+        courses = courses.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query)
+        )
+
     return render(request, 'teacher_dashboard.html', {
         'courses': courses,
-        'teacher_name': teacher.first_name
+        'teacher_name': teacher.get_full_name() or teacher.username,
+        'query': query  # Optional: to show "Results for..." in template
     })
+
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from .models import Course
@@ -755,13 +771,37 @@ def add_course_content(request, course_id):
         CourseContent.objects.create(course=course, title=title, video=video, material=material, description=description)
         return redirect('teacher_dashboard')
     return render(request, 'add_course_content.html', {'course': course})
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.shortcuts import render
+from .models import Course, Enrollment
 
 @login_required
 def student_dashboard_view(request):
+    query = request.GET.get('q')  # Get search term from query string
+
+    # Start with all courses
     courses = Course.objects.all()
+
+    # Filter if search term exists
+    if query:
+        courses = courses.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(teacher__first_name__icontains=query) |
+            Q(teacher__last_name__icontains=query)
+        )
+
+    # Get enrolled course IDs for current student
     enrollments = Enrollment.objects.filter(student=request.user)
     enrolled_courses = [e.course.id for e in enrollments]
-    return render(request, 'student_dashboard.html', {'courses': courses, 'enrolled_courses': enrolled_courses})
+
+    return render(request, 'student_dashboard.html', {
+        'courses': courses,
+        'enrolled_courses': enrolled_courses,
+        'student_name': request.user.get_full_name() or request.user.username,
+        'query': query  # optional if you want to show "Search results for..." in template
+    })
 
 @login_required
 def enroll_course(request, course_id):
@@ -891,7 +931,7 @@ def teacher_course_progress_view(request):
             status = "Completed" if progress_percent == 100 else "Ongoing"
 
             progress_data.append({
-                "student": student.get_full_name() or student.username,
+                "student_name": student.get_full_name() or student.username,
                 "course": course.title,
                 "completed_days": f"{completed_days}/{total_days}",
                 "progress": f"{progress_percent}%",
@@ -963,4 +1003,20 @@ def student_course_progress_view(request, course_id, student_id):
         'student': student,
         'course': course,
         'progress_data': progress_data,
+    })
+
+
+from django.contrib.auth.decorators import login_required
+from .models import Enrollment
+
+@login_required
+def student_my_courses(request):
+    student = request.user
+    enrollments = Enrollment.objects.filter(student=student).select_related('course')
+    enrolled_courses = [enrollment.course for enrollment in enrollments]
+    print("Student My Courses View Triggered")
+
+    return render(request, 'student_my_courses.html', {
+        'courses': enrolled_courses,
+        'student_name': student.get_full_name() or student.username
     })

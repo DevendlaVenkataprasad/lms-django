@@ -1,28 +1,51 @@
-<table class="table table-striped table-bordered">
-    <thead class="table-dark">
-        <tr>
-            <th>Student Name</th>
-            <th>Course</th>
-            <th>Completed Days</th>
-            <th>Progress</th>
-            <th>Quiz Avg</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for row in progress_data %}
-        <tr>
-            <td>{{ row.student }}</td>
-            <td>{{ row.course }}</td>
-            <td>{{ row.completed_days }}</td>
-            <td>{{ row.progress }}</td>
-            <td>{{ row.quiz_avg }}</td>
-            <td>{{ row.status }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="6" class="text-center">No progress data available.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<div class="container my-5">
+    <h2 class="mb-4 text-center text-primary fw-bold">🎓 My Course Progress</h2>
+    <div class="table-responsive shadow rounded">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="text-white text-center" style="background: linear-gradient(to right, #0d6efd, #0dcaf0);">
+                <tr>
+                    <th>📘 Course</th>
+                    <th>📅 Completed Days</th>
+                    <th>📈 Progress</th>
+                    <th>📝 Quiz Avg</th>
+                    <th>📌 Status</th>
+                </tr>
+            </thead>
+            <tbody class="text-center">
+                {% for row in progress_data %}
+                <tr>
+                    <td class="fw-semibold">{{ row.course }}</td>
+                    <td>{{ row.completed_days }}</td>
+                    <td>
+                        {% with row.progress|slice:":-1" as progress_value %}
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 style="width: {{ progress_value }}%;" 
+                                 aria-valuenow="{{ progress_value }}" aria-valuemin="0" aria-valuemax="100">
+                                {{ progress_value }}%
+                            </div>
+                        </div>
+                        {% endwith %}
+                    </td>
+                    <td>
+                        <span class="badge bg-info text-dark">{{ row.quiz_avg }}</span>
+                    </td>
+                    <td>
+                        {% if row.status == "Completed" %}
+                            <span class="badge bg-success">✅ {{ row.status }}</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">⏳ {{ row.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No progress data available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

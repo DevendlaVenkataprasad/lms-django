@@ -111,8 +111,11 @@
           </li>
           <!-- Other Sections -->
           <li class="nav-item">
-            <a class="nav-link text-white" href="#">My Courses</a>
+            <a class="nav-link text-white fw-bold" style="cursor: pointer;" href="{% url 'student_my_courses' %}">
+              📘 My Courses
+            </a>
           </li>
+          
           <li class="nav-item">
             <a class="nav-link text-white" href="{% url 'student_progress' %}">Progress</a>
           </li>
@@ -126,10 +129,11 @@
           
         </ul>
         <!-- Search bar -->
-        <form class="d-flex me-3">
-          <input class="form-control me-2" type="search" placeholder="Search here..." aria-label="Search">
+        <form class="d-flex me-3" method="GET">
+          <input class="form-control me-2" type="search" name="q" placeholder="Search here..." value="{{ query|default:'' }}">
           <button class="btn btn-primary" type="submit">Search</button>
         </form>
+        
              <!-- Profile Icon -->
              <ul class="navbar-nav ms-auto">
               <li class="nav-item">
@@ -154,7 +158,14 @@
         <div class="row g-4">
            
             <div class="container py-5">
-              <h2 class="mb-4">Student Dashboard</h2>
+              <h2 class="mb-4">
+                {% if query %}
+                  🔍 Results for "{{ query }}"
+                {% else %}
+                  📚 All Available Courses
+                {% endif %}
+              </h2>
+              
               <div class="container mt-4">
                 <div class="row">
                   {% for course in courses %}
@@ -168,7 +179,10 @@
                       <div class="card-body d-flex flex-column">
                         <h5 class="card-title">{{ course.title }}</h5>
                         <p class="card-text">{{ course.description|truncatewords:20 }}</p>
-              
+                             <!-- Instructor Name -->
+                        <p class="text-muted small mb-1">
+                           👨‍🏫 <strong>Instructor:</strong> {{ course.teacher.get_full_name|default:course.teacher.username }}
+                        </p>
                         {% if course.id in enrolled_courses %}
                           <span class="badge bg-success mb-2">✅ Enrolled</span>
                           <a href="{% url 'view_course' course.id %}" class="btn btn-primary mt-auto">View Course</a>
