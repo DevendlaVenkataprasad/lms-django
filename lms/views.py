@@ -1171,3 +1171,40 @@ def submit_review(request, course_id):
         return redirect('student_dashboard')
 
     return render(request, 'submit_review.html', {'course': course})
+
+##
+from .models import CourseAnswer,CourseQuestion
+@login_required
+def course_forum(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    questions = course.questions.all().order_by('-created_at')
+
+    if request.method == 'POST':
+        question_text = request.POST.get('question')
+        if question_text:
+            CourseQuestion.objects.create(course=course, student=request.user, question_text=question_text)
+            return redirect('course_forum', course_id=course.id)
+
+    return render(request, 'course_forum.html', {'course': course, 'questions': questions})
+
+
+@login_required
+def post_answer(request, question_id):
+    question = get_object_or_404(CourseQuestion, id=question_id)
+    if request.method == 'POST':
+        answer_text = request.POST.get('answer')
+        if answer_text:
+            CourseAnswer.objects.create(question=question, user=request.user, answer_text=answer_text)
+    return redirect('course_forum', course_id=question.course.id)
+
+
+@login_required
+def vote_item(request, type, obj_type, obj_id):
+    model = CourseQuestion if obj_type == "question" else CourseAnswer
+    obj = get_object_or_404(model, id=obj_id)
+    if type == "upvote":
+        obj.upvotes += 1
+    else:
+        obj.downvotes += 1
+    obj.save()
+    return redirect('course_forum', course_id=obj.question.course.id if obj_type == "answer" else obj.course.id)

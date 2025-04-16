@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import   submit_review,generate_certificate,student_my_courses,student_course_progress_view,enrolled_students_view,teacher_course_list_view,mark_as_complete,student_progress_view,teacher_course_progress_view,delete_course,view_course_students,delete_course_content,view_course,enroll_course,add_course_content,add_course,document_list,view_all,add_content,upload_videos,video_list,create_quiz,quiz_list,attempt_quiz,submit_quiz,upload_document,save_internship,delete_internship,delete_education,upload_profile_picture,edit_education,edit_profile,update_profile,profile_view,chatbot_response,student_dashboard_view, teacher_dashboard_view,send_otp,home_view,login_view, register_view, logout_view, forgot_password_view,reset_password_view,verify_otp
+from .views import   vote_item,post_answer, course_forum,submit_review,generate_certificate,student_my_courses,student_course_progress_view,enrolled_students_view,teacher_course_list_view,mark_as_complete,student_progress_view,teacher_course_progress_view,delete_course,view_course_students,delete_course_content,view_course,enroll_course,add_course_content,add_course,document_list,view_all,add_content,upload_videos,video_list,create_quiz,quiz_list,attempt_quiz,submit_quiz,upload_document,save_internship,delete_internship,delete_education,upload_profile_picture,edit_education,edit_profile,update_profile,profile_view,chatbot_response,student_dashboard_view, teacher_dashboard_view,send_otp,home_view,login_view, register_view, logout_view, forgot_password_view,reset_password_view,verify_otp
 
 urlpatterns = [
     path('login/', login_view, name='login'),
@@ -59,6 +59,10 @@ urlpatterns = [
     path('student/my-courses/', student_my_courses, name='student_my_courses'),
     path('certificate/<int:course_id>/', generate_certificate, name='generate_certificate'),
     path('course/<int:course_id>/review/', submit_review, name='submit_review'),
+    ##
+    path('course/<int:course_id>/forum/', course_forum, name='course_forum'),
+    path('question/<int:question_id>/answer/', post_answer, name='post_answer'),
+    path('vote/<str:type>/<str:obj_type>/<int:obj_id>/', vote_item, name='vote_item'),
 
 
 ]

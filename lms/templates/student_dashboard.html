@@ -248,7 +248,8 @@ body {
                 
                         <span class="badge bg-success mb-2">✅ Enrolled</span>
                         <a href="{% url 'view_course' course.id %}" class="btn btn-primary mt-auto">View Course</a>
-                
+                         
+                         <a href="{% url 'course_forum' course.id %}" class="btn btn-outline-info btn-sm mt-2">💬 Forum</a>
                         {% if item.can_download_certificate %}
                           <a href="{% url 'generate_certificate' course.id %}" class="btn btn-success btn-sm mt-2">🎓 Download Certificate</a>
                           <a href="{% url 'submit_review' course.id %}" class="btn btn-warning btn-sm mt-2">✍️ Leave a Review</a>

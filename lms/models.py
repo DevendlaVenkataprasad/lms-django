@@ -198,3 +198,30 @@ class CourseReview(models.Model):
 
     def __str__(self):
         return f"{self.student.username} - {self.course.title} ({self.rating}⭐)"
+###
+
+from django.db import models
+from django.contrib.auth.models import User
+
+class CourseQuestion(models.Model):
+    course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='questions')
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    question_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    upvotes = models.IntegerField(default=0)
+    downvotes = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.question_text[:50]
+
+
+class CourseAnswer(models.Model):
+    question = models.ForeignKey(CourseQuestion, on_delete=models.CASCADE, related_name='answers')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    answer_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    upvotes = models.IntegerField(default=0)
+    downvotes = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"Answer by {self.user.username}"
