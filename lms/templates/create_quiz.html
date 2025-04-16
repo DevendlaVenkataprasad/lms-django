@@ -38,6 +38,8 @@
         <h1 class="text-center mb-4">Create a New Quiz</h1>
         <form method="POST" id="quizForm">
             {% csrf_token %}
+           
+              
             
             <!-- Quiz Title -->
             <div class="mb-3">
@@ -99,6 +101,10 @@
             <div class="d-flex justify-content-center mb-3">
                 <button type="button" class="btn btn-outline-primary" id="add-question-btn">Add Another Question</button>
             </div>
+            <div class="mb-3">
+                <label for="quiz_time_limit" class="form-label">Time Limit (in minutes)</label>
+                <input type="number" class="form-control" name="quiz_time_limit" id="quiz_time_limit" value="10" min="1" required>
+              </div>
 
             <!-- Submit Button -->
             <div class="d-grid">

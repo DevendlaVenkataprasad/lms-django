@@ -1,0 +1,19 @@
+<h4>Submit a Review</h4>
+<form method="post">
+    {% csrf_token %}
+    <label>Rating:</label>
+    <select name="rating" class="form-select" required>
+        <option value="">Select a rating</option>
+        {% for i in "12345" %}
+            <option value="{{ i }}">
+                {{ i }}
+                {% for star in "12345"|slice:":i"|make_list %}⭐{% endfor %}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Feedback:</label>
+    <textarea name="feedback" class="form-control mt-2" placeholder="Write your feedback..."></textarea>
+    
+    <button type="submit" class="btn btn-primary mt-3">Submit Review</button>
+</form>

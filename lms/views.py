@@ -558,6 +558,7 @@ from .models import CourseContent, Quiz, Question, Option
 
 def create_quiz(request, course_content_id):
     course_content = get_object_or_404(CourseContent, id=course_content_id)
+    quiz_time_limit = request.POST.get('quiz_time_limit') or 10
 
     if request.method == 'POST':
         quiz_title = request.POST.get('quiz_title')
@@ -565,7 +566,8 @@ def create_quiz(request, course_content_id):
         quiz = Quiz.objects.create(
             course_content=course_content,
             title=quiz_title,
-            description=quiz_description
+            description=quiz_description,
+            time_limit=quiz_time_limit
         )
 
         questions = request.POST.getlist('question[]')
@@ -774,16 +776,15 @@ def add_course_content(request, course_id):
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import render
-from .models import Course, Enrollment
+from django.contrib.auth.decorators import login_required
+from .models import Course, Enrollment, StudentCourseProgress, CourseContent
 
 @login_required
 def student_dashboard_view(request):
-    query = request.GET.get('q')  # Get search term from query string
+    query = request.GET.get('q')  # Get search term from search bar
 
-    # Start with all courses
+    # Fetch all courses (filtered by search if applicable)
     courses = Course.objects.all()
-
-    # Filter if search term exists
     if query:
         courses = courses.filter(
             Q(title__icontains=query) |
@@ -792,15 +793,26 @@ def student_dashboard_view(request):
             Q(teacher__last_name__icontains=query)
         )
 
-    # Get enrolled course IDs for current student
-    enrollments = Enrollment.objects.filter(student=request.user)
-    enrolled_courses = [e.course.id for e in enrollments]
+    # Fetch enrollments for the current student
+    enrollments = Enrollment.objects.filter(student=request.user).select_related('course')
+    enrolled_courses = []
+
+    for enrollment in enrollments:
+        course = enrollment.course
+        total_contents = CourseContent.objects.filter(course=course).count()
+        completed_contents = StudentCourseProgress.objects.filter(enrollment=enrollment, is_completed=True).count()
+        can_download_certificate = total_contents > 0 and completed_contents == total_contents  # ✅ Certificate eligibility check
+
+        enrolled_courses.append({
+            'course': course,
+            'can_download_certificate': can_download_certificate
+        })
 
     return render(request, 'student_dashboard.html', {
         'courses': courses,
         'enrolled_courses': enrolled_courses,
         'student_name': request.user.get_full_name() or request.user.username,
-        'query': query  # optional if you want to show "Search results for..." in template
+        'query': query  # Needed to display search term in UI
     })
 
 @login_required
@@ -1011,12 +1023,151 @@ from .models import Enrollment
 
 @login_required
 def student_my_courses(request):
-    student = request.user
-    enrollments = Enrollment.objects.filter(student=student).select_related('course')
-    enrolled_courses = [enrollment.course for enrollment in enrollments]
-    print("Student My Courses View Triggered")
+    enrollments = Enrollment.objects.filter(student=request.user).select_related('course')
+    enrolled_courses = []
+
+    for enrollment in enrollments:
+        course = enrollment.course
+        total_contents = course.coursecontent_set.count()
+        completed_contents = StudentCourseProgress.objects.filter(enrollment=enrollment, is_completed=True).count()
+        can_download_certificate = total_contents > 0 and completed_contents == total_contents
+
+        enrolled_courses.append({
+            'course': course,
+            'can_download_certificate': can_download_certificate
+        })
 
     return render(request, 'student_my_courses.html', {
         'courses': enrolled_courses,
-        'student_name': student.get_full_name() or student.username
+        'student_name': request.user.get_full_name() or request.user.username
     })
+
+
+
+from django.http import HttpResponse, FileResponse
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch
+from reportlab.lib.colors import HexColor
+from django.http import FileResponse, HttpResponse
+from django.contrib.staticfiles import finders  # ✅ For logo/signature
+from io import BytesIO
+from datetime import datetime
+from django.shortcuts import get_object_or_404
+from .models import Course, CourseContent, Enrollment, StudentCourseProgress  # ✅ Add your models
+
+def generate_certificate(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    student = request.user
+
+    # Check enrollment & completion
+    enrollment = Enrollment.objects.filter(student=student, course=course).first()
+    if not enrollment:
+        return HttpResponse("You are not enrolled in this course.")
+
+    total_contents = CourseContent.objects.filter(course=course).count()
+    completed_contents = StudentCourseProgress.objects.filter(enrollment=enrollment, is_completed=True).count()
+
+    if total_contents == 0 or completed_contents < total_contents:
+        return HttpResponse("You have not completed the course yet.")
+
+    # ✅ Generate PDF
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    # Colors and styles
+    border_color = HexColor("#4CAF50")
+    text_color = HexColor("#333333")
+    title_color = HexColor("#2E86C1")
+
+    # Draw Border
+    c.setStrokeColor(border_color)
+    c.setLineWidth(6)
+    c.rect(40, 40, width - 80, height - 80)
+
+    # ✅ Add LMS Logo
+    logo_path = finders.find("images/lms_logo.png")
+    if logo_path:
+        c.drawImage(logo_path, width/2 - 50, height - 180, width=120, height=80, mask='auto')
+
+    # Title
+    c.setFont("Helvetica-Bold", 28)
+    c.setFillColor(title_color)
+    c.drawCentredString(width / 2, height - 220, "Certificate of Completion")
+
+    # Subtitle
+    c.setFont("Helvetica", 16)
+    c.setFillColor(text_color)
+    c.drawCentredString(width / 2, height - 260, "This is to certify that")
+
+    # Student Name
+    c.setFont("Helvetica-Bold", 22)
+    c.drawCentredString(width / 2, height - 290, f"{student.get_full_name() or student.username}")
+
+    # Completion Text
+    c.setFont("Helvetica", 16)
+    c.drawCentredString(width / 2, height - 330, f"has successfully completed the course")
+
+    # Course Name
+    c.setFont("Helvetica-Bold", 18)
+    c.setFillColor(title_color)
+    c.drawCentredString(width / 2, height - 370, f"{course.title}")
+
+    # Completion Date
+    c.setFont("Helvetica-Oblique", 14)
+    c.setFillColor(text_color)
+    c.drawCentredString(width / 2, height - 400, f"Date of Completion: {datetime.now().strftime('%B %d, %Y')}")
+
+    # ✅ Add Instructor Signature Image
+    signature_path = finders.find("images/signature.png")
+    if signature_path:
+        c.drawImage(signature_path, width / 2 - 60, 140, width=120, height=40, mask='auto')
+
+    # Signature line and label
+    c.line(width / 2 - 100, 130, width / 2 + 100, 130)
+    c.setFont("Helvetica", 12)
+    c.drawCentredString(width / 2, 110, "Instructor Signature")
+
+    # LMS Footer
+    c.setFont("Helvetica-Oblique", 10)
+    c.setFillColor(HexColor("#888888"))
+    c.drawCentredString(width / 2, 60, "Generated by LMS · Learn. Grow. Achieve.")
+
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename=f"{course.title}_Certificate.pdf")
+
+
+from .models import Course, CourseReview, Enrollment
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+
+@login_required
+def submit_review(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+
+    # Ensure student is enrolled and completed the course
+    enrollment = Enrollment.objects.filter(course=course, student=request.user).first()
+    if not enrollment:
+        return HttpResponse("You are not enrolled in this course.")
+
+    total = course.coursecontent_set.count()
+    completed = enrollment.studentcourseprogress_set.filter(is_completed=True).count()
+    if completed < total:
+        return HttpResponse("You need to complete the course before reviewing.")
+
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        feedback = request.POST.get('feedback')
+
+        CourseReview.objects.update_or_create(
+            course=course,
+            student=request.user,
+            defaults={'rating': rating, 'feedback': feedback}
+        )
+        return redirect('student_dashboard')
+
+    return render(request, 'submit_review.html', {'course': course})

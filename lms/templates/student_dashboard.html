@@ -1,3 +1,5 @@
+{% load custom_filters %}
+{% load average_filters %}
 {% load static %}
 
 <!DOCTYPE html>
@@ -84,6 +86,37 @@
   .dashboard-header h5 {
       font-size: 1rem;
   }
+  body.dark-mode {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+body.dark-mode .navbar {
+  background: linear-gradient(to right, #1c1c1c, #333);
+}
+
+body.dark-mode .card {
+  background-color: #1e1e1e;
+  color: #ffffff;
+  border: 1px solid #444;
+}
+
+body.dark-mode .table,
+body.dark-mode .form-control,
+body.dark-mode .btn {
+  background-color: #1f1f1f;
+  color: #ffffff;
+  border-color: #444;
+}
+
+body.dark-mode .nav-link,
+body.dark-mode .navbar-brand {
+  color: #ffffff !important;
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
 
 
     </style>
@@ -124,8 +157,9 @@
             <a class="nav-link text-white active" href="">About</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-white" href="">settings</a>
+            <a class="nav-link text-white" href="#">Settings</a>
           </li>
+         
           
         </ul>
         <!-- Search bar -->
@@ -168,7 +202,8 @@
               
               <div class="container mt-4">
                 <div class="row">
-                  {% for course in courses %}
+                  {% for item in enrolled_courses %}
+                  {% with course=item.course %}
                   <div class="col-md-3 mb-4">
                     <div class="card h-100 shadow-sm">
                       {% if course.thumbnail %}
@@ -176,26 +211,58 @@
                       {% else %}
                         <img src="{% static 'images/default_course_thumbnail.png' %}" class="card-img-top" alt="Default Thumbnail">
                       {% endif %}
+                
                       <div class="card-body d-flex flex-column">
                         <h5 class="card-title">{{ course.title }}</h5>
                         <p class="card-text">{{ course.description|truncatewords:20 }}</p>
-                             <!-- Instructor Name -->
+                       
+                        {% with course.reviews.all as reviews %}
+                        {% if reviews %}
+                          {% with reviews|average:"rating" as avg_rating %}
+                            {% with avg_rating|floatformat:1 as avg %}
+                              <p class="text-warning mb-1">
+                                {% for star in avg|star_rating %}
+                                  {% if star == 'full' %}
+                                    ⭐
+                                  {% elif star == 'half' %}
+                                    ✩
+                                  {% else %}
+                                    ☆
+                                  {% endif %}
+                                {% endfor %}
+                                <span class="text-dark">({{ avg }}/5)</span>
+                              </p>
+                            {% endwith %}
+                          {% endwith %}
+                        {% else %}
+                          <p class="text-muted small mb-1">⭐ No ratings yet</p>
+                        {% endif %}
+                      {% endwith %}
+                      
+                      
+                      
+                        
                         <p class="text-muted small mb-1">
                            👨‍🏫 <strong>Instructor:</strong> {{ course.teacher.get_full_name|default:course.teacher.username }}
                         </p>
-                        {% if course.id in enrolled_courses %}
-                          <span class="badge bg-success mb-2">✅ Enrolled</span>
-                          <a href="{% url 'view_course' course.id %}" class="btn btn-primary mt-auto">View Course</a>
-                        {% else %}
-                          <a href="{% url 'enroll_course' course.id %}" class="btn btn-outline-success mt-auto">Enroll</a>
+                
+                        <span class="badge bg-success mb-2">✅ Enrolled</span>
+                        <a href="{% url 'view_course' course.id %}" class="btn btn-primary mt-auto">View Course</a>
+                
+                        {% if item.can_download_certificate %}
+                          <a href="{% url 'generate_certificate' course.id %}" class="btn btn-success btn-sm mt-2">🎓 Download Certificate</a>
+                          <a href="{% url 'submit_review' course.id %}" class="btn btn-warning btn-sm mt-2">✍️ Leave a Review</a>
                         {% endif %}
                       </div>
                     </div>
                   </div>
-                  {% endfor %}
-                </div>
+                  {% endwith %}
+                {% endfor %}
+                   </div>
               </div>
               
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    
 </body>
 </html>
