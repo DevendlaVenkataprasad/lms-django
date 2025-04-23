@@ -1073,9 +1073,10 @@ def generate_certificate(request, course_id):
         return HttpResponse("You have not completed the course yet.")
 
     # ✅ Generate PDF
+    square_size = 600  # Points (800x800 = ~11in x 11in)
     buffer = BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
+    c = canvas.Canvas(buffer, pagesize=(square_size, square_size))
+    width = height = square_size
 
     # Colors and styles
     border_color = HexColor("#4CAF50")
@@ -1083,9 +1084,11 @@ def generate_certificate(request, course_id):
     title_color = HexColor("#2E86C1")
 
     # Draw Border
-    c.setStrokeColor(border_color)
-    c.setLineWidth(6)
-    c.rect(40, 40, width - 80, height - 80)
+   # ✅ Draw Custom Background with Border Design
+    background_path = finders.find("images/certificate_template.png")
+    if background_path:
+       c.drawImage(background_path, 0, 0, width=width, height=height, mask='auto')
+
 
     # ✅ Add LMS Logo
     logo_path = finders.find("images/lms_logo.png")
@@ -1114,21 +1117,22 @@ def generate_certificate(request, course_id):
     c.setFont("Helvetica-Bold", 18)
     c.setFillColor(title_color)
     c.drawCentredString(width / 2, height - 370, f"{course.title}")
-
-    # Completion Date
-    c.setFont("Helvetica-Oblique", 14)
-    c.setFillColor(text_color)
-    c.drawCentredString(width / 2, height - 400, f"Date of Completion: {datetime.now().strftime('%B %d, %Y')}")
-
-    # ✅ Add Instructor Signature Image
     signature_path = finders.find("images/signature.png")
+       # Instructor Signature - Bottom Right
     if signature_path:
-        c.drawImage(signature_path, width / 2 - 60, 140, width=120, height=40, mask='auto')
-
-    # Signature line and label
-    c.line(width / 2 - 100, 130, width / 2 + 100, 130)
+        c.drawImage(signature_path, width - 180, 125, width=120, height=20, mask='auto')
+    c.line(width - 200, 120, width - 60, 120)
     c.setFont("Helvetica", 12)
-    c.drawCentredString(width / 2, 110, "Instructor Signature")
+    c.drawCentredString(width - 130, 100, "Instructor Signature")
+
+    # Date of Completion Section - Bottom Left (Styled like signature)
+    c.line(60, 120, 200, 120)
+    c.setFont("Helvetica", 12)
+    c.drawCentredString(130, 100, "Date of Completion")
+
+    c.setFont("Helvetica-Oblique", 12)
+    c.setFillColor(text_color)
+    c.drawCentredString(130, 130, datetime.now().strftime('%B %d, %Y'))
 
     # LMS Footer
     c.setFont("Helvetica-Oblique", 10)
@@ -1208,3 +1212,6 @@ def vote_item(request, type, obj_type, obj_id):
         obj.downvotes += 1
     obj.save()
     return redirect('course_forum', course_id=obj.question.course.id if obj_type == "answer" else obj.course.id)
+
+
+
