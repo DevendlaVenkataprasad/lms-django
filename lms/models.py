@@ -120,6 +120,7 @@ class StudentAnswer(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Update to reference the custom user model
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     selected_option = models.ForeignKey(Option, on_delete=models.CASCADE)
+    
 
     def __str__(self):
         return f"Answer by {self.student} for {self.question}"

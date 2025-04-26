@@ -461,7 +461,10 @@ from .models import Internship
 def save_internship(request):
     if request.method == "POST":
         internship_id = request.POST.get("internship_id")  # Get internship ID from the form
+       
+        user_type = request.POST.get("user_type")
 
+        
         # If an ID is provided, update the existing record
         if internship_id:
             internship = get_object_or_404(Internship, id=internship_id)
@@ -619,7 +622,9 @@ def attempt_quiz(request, quiz_id):
 
         for question in questions:
             selected_answer = request.POST.get(f"question_{question.id}")
-            correct_option = question.correct_option
+            option = question.option_set.first()  # Assuming only one Option per Question
+            correct_option = option.correct_option if option else None
+
 
             if selected_answer and selected_answer.upper() == correct_option.upper():
                 score += question.marks
@@ -796,7 +801,7 @@ def student_dashboard_view(request):
     # Fetch enrollments for the current student
     enrollments = Enrollment.objects.filter(student=request.user).select_related('course')
     enrolled_courses = []
-
+    enrolled_course_ids = [] 
     for enrollment in enrollments:
         course = enrollment.course
         total_contents = CourseContent.objects.filter(course=course).count()
@@ -807,10 +812,12 @@ def student_dashboard_view(request):
             'course': course,
             'can_download_certificate': can_download_certificate
         })
+        enrolled_course_ids.append(course.id)  # ✅ Add course.id
 
     return render(request, 'student_dashboard.html', {
         'courses': courses,
         'enrolled_courses': enrolled_courses,
+         'enrolled_course_ids': enrolled_course_ids,
         'student_name': request.user.get_full_name() or request.user.username,
         'query': query  # Needed to display search term in UI
     })
@@ -877,16 +884,49 @@ def delete_course_content(request, content_id):
     messages.success(request, "Course content deleted successfully.")
     return redirect('view_course', course_id=course_id)
 
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from .models import Course, CourseContent, Enrollment, StudentCourseProgress, Quiz, Question, Option, StudentAnswer, CourseReview, CourseQuestion, CourseAnswer
 
 @login_required
 def delete_course(request, course_id):
-    course = get_object_or_404(Course, id=course_id, teacher=request.user)
-    course.delete()
-    return redirect('teacher_dashboard')
+    try:
+        course = get_object_or_404(Course, id=course_id)
 
+        # Delete related CourseAnswer and CourseQuestion
+        CourseAnswer.objects.filter(question__course=course).delete()
+        CourseQuestion.objects.filter(course=course).delete()
+
+        # Delete CourseReviews
+        CourseReview.objects.filter(course=course).delete()
+
+        # Delete StudentAnswers
+        StudentAnswer.objects.filter(quiz__course_content__course=course).delete()
+
+        # Delete Options and Questions
+        Option.objects.filter(question__quiz__course_content__course=course).delete()
+        Question.objects.filter(quiz__course_content__course=course).delete()
+
+        # Delete Quizzes
+        Quiz.objects.filter(course_content__course=course).delete()
+
+        # Delete Student Progress
+        StudentCourseProgress.objects.filter(course_content__course=course).delete()
+
+        # Delete Enrollments
+        Enrollment.objects.filter(course=course).delete()
+
+        # Delete CourseContent
+        CourseContent.objects.filter(course=course).delete()
+
+        # Finally, delete the Course
+        course.delete()
+
+        messages.success(request, "✅ Course deleted successfully.")
+    except Exception as e:
+        messages.error(request, f"❌ Failed to delete course: {e}")
+
+    return redirect('teacher_dashboard')
 
 from django.shortcuts import render
 from .models import Enrollment, StudentCourseProgress
@@ -1215,3 +1255,9 @@ def vote_item(request, type, obj_type, obj_id):
 
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
+@login_required
+def settings_view(request):
+    return render(request, 'settings.html')

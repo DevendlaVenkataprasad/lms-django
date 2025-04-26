@@ -1,24 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LMS Home</title>
-    <style>
-        .login-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .chatbot-button {
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Learning Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+
+    }
+
+    body {
+      line-height: 1.6;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      background: linear-gradient(to right,rgb(220, 148, 54),rgb(115, 115, 211), #31597c, #a2e5e9,rgb(220, 148, 54));
+      color: white;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    header a:hover{
+        background-color: gold;
+    }
+
+    header h1 {
+      /* font-size: 3rem; */
+      /* border: 2px solid; */
+      font-size: 40px;
+      /* color: black; */
+
+    }
+
+    header p {
+      font-size: 1.2rem;
+      margin-top: 10px;
+    }
+
+    .cta-buttons {
+      margin-top: 20px;
+    }
+    #sec1{
+        /* border: 2px solid; */
+        height: 400px;
+        background-color: rgb(225, 218, 218);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+    #q10{
+        /* border: 2px solid; */
+        width: 50%;
+        height: 90%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    #q11{
+        /* border: 2px solid; */
+        width: 30%;
+        height: 97%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        /* gap: 10px; */
+
+    }
+    #sec1 h1{
+        font-size: 60px;
+        text-transform: capitalize;
+        font-weight:500;
+    }
+    #sec1 h3{
+        /* border: 2px solid; */
+        width: 80%;
+        font-weight: 500;
+        color: rgb(82, 78, 78);
+    }
+
+    #sec1 button{
+        width:50% ;
+        height: 50px;
+        font-size: 20px;
+        border-radius: 25px;
+        border: none;
+        background-color: blue;
+        color: white;
+        margin-top: 10px;
+
+    }
+    #sec1 aside{
+        width: 80%;
+        height: 58%;
+        /* border: 2px solid; */
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+
+
+    #sec2{
+        height: 650px;
+        /* border:2px solid; */
+        background-color: rgb(223, 223, 233);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+       
+        /* width: 80 */
+    }
+    #sec2 article{
+        /* border: 2px solid; */
+        height: 550px;
+        width: 80%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+    }
+    #sec2 div{
+        /* border: 2px solid; */
+        width: 700px;
+        height: 550px;
+        overflow: hidden;
+        
+        
+    }
+    #sec2 div img{
+        width: 700px;
+        height: 550px;
+    }
+    #sec2 aside{
+        width: 400px;
+        /* border: 2px solid; */
+        height: 400px;
+        
+    }
+    #sec2 h1{
+        font-size: 55px;
+        color: rgb(3, 3, 33);
+        word-spacing: 20px;
+        text-shadow:3px 3px 2px white;
+    }
+    #sec2 aside p{
+        font-size: 20px;
+        color: rgb(91, 86, 86);
+    }
+    #sec2 aside h3{
+        font-size: 25px;
+    }
+
+
+
+
+
+
+
+
+
+
+
+    .cta-buttons a {
+      text-decoration: none;
+      background: white;
+      color: #00aaff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      margin: 0 10px;
+      display: inline-block;
+    }
+
+    .section {
+      padding: 60px 20px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .courses, .features, .steps, .testimonials {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .card img {
+      max-width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    footer {
+      background: #222;
+      color: #fff;
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    footer a {
+      color: #00f2fe;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+
+
+
+
+
+    
+
+.chatbot-button {
             position: fixed;
             bottom: 20px;
             right: 20px;
@@ -96,106 +303,275 @@
             cursor: pointer;
             margin-left: 5px;
         }
-    </style>
+  </style>
 </head>
 <body>
-    <a href="{% url 'login' %}" class="login-button">Login</a>
-    <h1 style="text-align: center;">Welcome to LMS</h1>
-    
-    <button class="chatbot-button" onclick="toggleChatbot()">💬</button>
-    
-    <div class="chatbot-container" id="chatbot">
-        <div class="chatbot-header">Chatbot Assistant</div>
-        <div class="chatbot-messages" id="chatbot-messages">
-            <p>👋 Hi! How can I help you?</p>
-        </div>
-        <div class="chatbot-options" id="chatbot-options">
-            <button class="chatbot-option" onclick="showQuestions('course')">📚 Course Queries</button>
-            <button class="chatbot-option" onclick="showQuestions('assignment')">📝 Assignment & Exam</button>
-            <button class="chatbot-option" onclick="showQuestions('tech')">🔧 Technical Support</button>
-            <button class="chatbot-option" onclick="showQuestions('reminder')">🔔 Notifications & Reminders</button>
-            <button class="chatbot-option" onclick="showAnswer('contact')">📞 Contact Support</button>
-        </div>
-        <div class="chatbot-questions" id="chatbot-questions" style="display: none;"></div>
-        <button class="back-button" id="back-button" onclick="showMainMenu()" style="display: none;">⬅ Back</button>
-        
-        <!-- User Input for Chatbot -->
-        <div class="chatbot-input">
-            <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()">Send</button>
-        </div>
+  <header>
+    <h1>Unlock Your Potential with Online Learning Management System</h1>
+    <p>Join thousands of learners and gain skills from top educators.</p>
+    <div class="cta-buttons">
+      <a href="#courses">Browse Courses</a>
+      <a href="{% url 'register' %}">Sign Up Now</a>
+      <a href="{% url 'login' %}">Login</a>
     </div>
-    
-    <script>
-        function toggleChatbot() {
-            var chatbot = document.getElementById("chatbot");
-            chatbot.style.display = chatbot.style.display === "flex" ? "none" : "flex";
-        }
-    
-        function showQuestions(category) {
-            document.getElementById("chatbot-options").style.display = "none"; // Hide main menu
-            document.getElementById("back-button").style.display = "block"; // Show back button
-            
-            var questions = {
-                "course": ["How do I enroll in a course?", "Where can I find my enrolled courses?", "What are the available courses?"],
-                "assignment": ["When is my next assignment due?", "How do I submit an assignment?", "Where can I find my grades?"],
-                "tech": ["How do I reset my password?", "Why am I not receiving the OTP?", "How do I report a bug?"],
-                "reminder": ["Do I have any pending assignments?", "When is my next class?", "How do I set up notifications?"]
-            };
-            
-            var questionContainer = document.getElementById("chatbot-questions");
-            questionContainer.innerHTML = "";
-            questions[category].forEach(q => {
-                questionContainer.innerHTML += `<button class='chatbot-question' onclick='showAnswer("${q}")'>${q}</button>`;
-            });
-    
-            questionContainer.style.display = "flex";
-        }
-    
-        function showAnswer(question) {
-            var responses = {
-                "How do I enroll in a course?": "Go to the Courses section and click 'Enroll' on your desired course.",
-                "Where can I find my enrolled courses?": "Check the 'My Courses' tab in your dashboard.",
-                "What are the available courses?": "Courses available: Python, Java, Web Development, Data Science.",
-                "When is my next assignment due?": "You can check your upcoming assignments in the 'Assignments' section.",
-                "How do I submit an assignment?": "Click on 'Submit' under the respective assignment and upload your file.",
-                "Where can I find my grades?": "Grades are available under the 'Grades' tab in your dashboard.",
-                "How do I reset my password?": "Click 'Forgot Password' on the login page and follow the steps.",
-                "Why am I not receiving the OTP?": "Check your spam folder or request a new OTP.",
-                "How do I report a bug?": "Go to 'Help & Support' and submit a report.",
-                "Do I have any pending assignments?": "Check the 'Assignments' tab for pending work.",
-                "When is my next class?": "Your upcoming classes are listed under 'Schedule'.",
-                "How do I set up notifications?": "Go to 'Settings' > 'Notifications' to customize your alerts.",
-                "contact": "📞 Contact Support: +1 800 123 4567"
-            };
-    
-            var messageContainer = document.getElementById("chatbot-messages");
-            messageContainer.innerHTML += `<p><strong>You:</strong> ${question}</p>`;
-            messageContainer.innerHTML += `<p><strong>Bot:</strong> ${responses[question] || "I am not sure about that. Please contact support."}</p>`;
-            messageContainer.scrollTop = messageContainer.scrollHeight;
-        }
-    
-        function showMainMenu() {
-            document.getElementById("chatbot-options").style.display = "flex"; // Show main options
-            document.getElementById("chatbot-questions").style.display = "none"; // Hide question buttons
-            document.getElementById("back-button").style.display = "none"; // Hide back button
-        }
+  </header>
 
-        function sendMessage() {
-            var inputField = document.getElementById("chat-input");
-            var message = inputField.value.trim();
-            if (message === "") return;
 
-            showAnswer(message);
-            inputField.value = "";
-        }
 
-        function handleKeyPress(event) {
-            if (event.key === "Enter") {
-                sendMessage();
-            }
-        }  
-    </script>
+  <section id="sec1">
+    <div id="q10">
+        <h1>Learn without limits</h1>
+        <h3>We’re here to make learning simple, accessible, and effective. Whether you're a student preparing for exams, a professional upgrading your skills, or simply curious to explore something new — we've got the right course for you. </h3>
+        <button>Get Start </button>
+    </div>
+    <div id="q11">
+        
+        <aside>
+            <script type="module" src="https://unpkg.com/@splinetool/viewer/build/spline-viewer.js"></script>
+
+            <div style="width: 150px; height: 150px; overflow: hidden; background-color: rgba(0, 0, 0, .6);;">
+                <spline-viewer 
+                  url="https://prod.spline.design/FVZWbQH2B6ndj9UU/scene.splinecode"
+                  events-target="global"
+                  style="transform: scale(0.15); transform-origin: top left; width: 800px; height: 800px;">
+                </spline-viewer>
+              </div>
+              <div style="width: 150px; height: 150px; overflow: hidden; background-color: rgb(103, 103, 142);">
+                <spline-viewer 
+                  url="https://prod.spline.design/FVZWbQH2B6ndj9UU/scene.splinecode"
+                  events-target="global"
+                  style="transform: scale(0.15); transform-origin: top left; width: 800px; height: 800px;">
+                </spline-viewer>
+              </div>
+        </aside>
+        <aside>
+            <div style="width: 150px; height: 150px; overflow: hidden; background-color: rgb(186, 227, 189);">
+                <spline-viewer 
+                  url="https://prod.spline.design/FVZWbQH2B6ndj9UU/scene.splinecode"
+                  events-target="global"
+                  style="transform: scale(0.15); transform-origin: top left; width: 800px; height: 800px;">
+                </spline-viewer>
+              </div>
+              <div style="width: 150px; height: 150px; overflow: hidden; background-color: rgb(231, 159, 88);">
+                <spline-viewer 
+                  url="https://prod.spline.design/FVZWbQH2B6ndj9UU/scene.splinecode"
+                  events-target="global"
+                  style="transform: scale(0.15); transform-origin: top left; width: 800px; height: 800px;">
+                </spline-viewer>
+              </div>
+        </aside>
+    </div>
+
+  </section>
+
+  <section class="section" id="courses">
+    <h2>Popular Courses</h2>
+    <div class="courses">
+      <div class="card">
+        <img src="./media/HTML.png" alt="Course 1">
+        <h3>Web Development</h3>
+        <p>Learn HTML, CSS, JavaScript & more.</p>
+      </div>
+      <div class="card">
+        <img src="./media/app-java.jpeg" alt="Course 2">
+        <h3>Python Programming</h3>
+        <p>From basics to advanced with real projects.</p>
+      </div>
+      <div class="card">
+        <img src="./media/Django.jpeg" alt="Course 3">
+        <h3>Django</h3>
+        <p>Master data analysis & machine learning.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Why Choose Us?</h2>
+    <div class="features">
+      <div class="card">
+        <img src="./media/o5.webp" alt="">
+        <h3>Expert Instructors</h3>
+        <p>Learn from industry professionals with years of experience.</p>
+      </div>
+      <div class="card">
+        <img src="./media/o4.jpg" alt="">
+        <h3>Flexible Learning</h3>
+        <p>Learn at your own pace from anywhere in the world.</p>
+      </div>
+      <div class="card">
+        <img src="./media/Screenshot (166).png " alt="">
+        <h3>Certification</h3>
+        <p>Get certified and boost your career opportunities.</p>
+      </div>
+    </div>
+  </section>
+
+
+
+  <section id="sec2">
+
+    <h1>Earn a Recognized Certificate</h1>
+    <article>
+        <div>
+            <img src="./media/Screenshot (166).png" alt="">
+        </div>
+        <aside>
+            <h3>Start your journey today and earn your first certificate — it’s free to enroll!</h3>
+            <br><br><p>Complete any course on our platform and receive a professionally designed Certificate of Completion.
+            Showcase your achievements on your resume, LinkedIn profile, or with employers.</p>
+            </aside>
+        
+    </article>
+
+  </section>
+
+  <section class="section">
+    <h2>How It Works</h2>
+    <div class="steps">
+      <div class="card">
+        <img src="./media/g1.jpg" alt="">
+        <h3>1. Browse Courses</h3>
+        <p>Explore a wide range of topics.</p>
+      </div>
+      <div class="card">
+        <img src="./media/enroll.jpg" alt="">
+        <h3>2. Enroll & Learn</h3>
+        <p>Start learning through videos, quizzes, and more.</p>
+      </div>
+      <div class="card">
+        <img src="./media/Screenshot (166).png" alt="">
+        <h3>3. Get Certified</h3>
+        <p>Earn a certificate upon course completion.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>What Learners Say</h2>
+    <div class="testimonials">
+      <div class="card">
+        <img src="./media/a1.jpg" alt="" >
+        <p>"This platform changed my life. I landed a job after completing just two courses!"</p>
+        <strong>- Kiran P.</strong>
+      </div>
+      <div class="card">
+        <img src="./media/a2.jpg" alt="">
+        <p>"User-friendly interface and top-notch content. Highly recommend!"</p>
+        <strong>- Ravi K.</strong>
+      </div>
+      <div class="card">
+        <img src="./media/a3.jpg" alt="">
+        <p>"Great instructors and very helpful support team!"</p>
+        <strong>- Meena S.</strong>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 LearnOnline. All rights reserved.</p>
+    <div>
+      <a href="#">About</a> | <a href="#">Contact</a> | <a href="#">Terms</a>
+    </div>
+  </footer>
+
+
+
+
+  
+
+  <button class="chatbot-button" onclick="toggleChatbot()">💬</button>
     
+  <div class="chatbot-container" id="chatbot">
+      <div class="chatbot-header">Chatbot Assistant</div>
+      <div class="chatbot-messages" id="chatbot-messages">
+          <p>👋 Hi! How can I help you?</p>
+      </div>
+      <div class="chatbot-options" id="chatbot-options">
+          <button class="chatbot-option" onclick="showQuestions('course')">📚 Course Queries</button>
+          <button class="chatbot-option" onclick="showQuestions('assignment')">📝 Assignment & Exam</button>
+          <button class="chatbot-option" onclick="showQuestions('tech')">🔧 Technical Support</button>
+          <button class="chatbot-option" onclick="showQuestions('reminder')">🔔 Notifications & Reminders</button>
+          <button class="chatbot-option" onclick="showAnswer('contact')">📞 Contact Support</button>
+      </div>
+      <div class="chatbot-questions" id="chatbot-questions" style="display: none;"></div>
+      <button class="back-button" id="back-button" onclick="showMainMenu()" style="display: none;">⬅ Back</button>
+      
+      <!-- User Input for Chatbot -->
+      <div class="chatbot-input">
+          <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+          <button onclick="sendMessage()">Send</button>
+      </div>
+  </div>
+  <script>
+    function toggleChatbot() {
+        var chatbot = document.getElementById("chatbot");
+        chatbot.style.display = chatbot.style.display === "flex" ? "none" : "flex";
+    }
+
+    function showQuestions(category) {
+        document.getElementById("chatbot-options").style.display = "none"; // Hide main menu
+        document.getElementById("back-button").style.display = "block"; // Show back button
+        
+        var questions = {
+            "course": ["How do I enroll in a course?", "Where can I find my enrolled courses?", "What are the available courses?"],
+            "assignment": ["When is my next assignment due?", "How do I submit an assignment?", "Where can I find my grades?"],
+            "tech": ["How do I reset my password?", "Why am I not receiving the OTP?", "How do I report a bug?"],
+            "reminder": ["Do I have any pending assignments?", "When is my next class?", "How do I set up notifications?"]
+        };
+        
+        var questionContainer = document.getElementById("chatbot-questions");
+        questionContainer.innerHTML = "";
+        questions[category].forEach(q => {
+            questionContainer.innerHTML += `<button class='chatbot-question' onclick='showAnswer("${q}")'>${q}</button>`;
+        });
+
+        questionContainer.style.display = "flex";
+    }
+
+    function showAnswer(question) {
+        var responses = {
+            "How do I enroll in a course?": "Go to the Courses section and click 'Enroll' on your desired course.",
+            "Where can I find my enrolled courses?": "Check the 'My Courses' tab in your dashboard.",
+            "What are the available courses?": "Courses available: Python, Java, Web Development, Data Science.",
+            "When is my next assignment due?": "You can check your upcoming assignments in the 'Assignments' section.",
+            "How do I submit an assignment?": "Click on 'Submit' under the respective assignment and upload your file.",
+            "Where can I find my grades?": "Grades are available under the 'Grades' tab in your dashboard.",
+            "How do I reset my password?": "Click 'Forgot Password' on the login page and follow the steps.",
+            "Why am I not receiving the OTP?": "Check your spam folder or request a new OTP.",
+            "How do I report a bug?": "Go to 'Help & Support' and submit a report.",
+            "Do I have any pending assignments?": "Check the 'Assignments' tab for pending work.",
+            "When is my next class?": "Your upcoming classes are listed under 'Schedule'.",
+            "How do I set up notifications?": "Go to 'Settings' > 'Notifications' to customize your alerts.",
+            "contact": "📞 Contact Support: +1 800 123 4567"
+        };
+
+        var messageContainer = document.getElementById("chatbot-messages");
+        messageContainer.innerHTML += `<p><strong>You:</strong> ${question}</p>`;
+        messageContainer.innerHTML += `<p><strong>Bot:</strong> ${responses[question] || "I am not sure about that. Please contact support."}</p>`;
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+    }
+
+    function showMainMenu() {
+        document.getElementById("chatbot-options").style.display = "flex"; // Show main options
+        document.getElementById("chatbot-questions").style.display = "none"; // Hide question buttons
+        document.getElementById("back-button").style.display = "none"; // Hide back button
+    }
+
+    function sendMessage() {
+        var inputField = document.getElementById("chat-input");
+        var message = inputField.value.trim();
+        if (message === "") return;
+
+        showAnswer(message);
+        inputField.value = "";
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    }  
+</script>
+  <!-- <script type="module" src="https://unpkg.com/@splinetool/viewer/build/spline-viewer.js"></script> -->
 </body>
 </html>

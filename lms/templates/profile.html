@@ -372,7 +372,7 @@
     <button class="btn btn-primary" onclick="document.getElementById('internshipForm').style.display='block'">+ Add Internship</button>
     
     <div id="internshipForm" style="display: none;">
-        <form method="POST">
+        <form id="internshipForm" method="POST">
             {% csrf_token %}
             <label>Company Name</label>
             <input type="text" name="company_name" id="company_name" class="form-control" required>
