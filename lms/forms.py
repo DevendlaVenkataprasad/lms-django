@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from .models import Student, Education
 from django.forms import modelformset_factory
-from .models import Video, Document, Quiz 
+from .models import  Quiz 
 class RegisterForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(), label="Password")
     confirm_password = forms.CharField(widget=forms.PasswordInput(), label="Confirm Password")
@@ -37,26 +37,6 @@ class EducationForm(forms.ModelForm):
         fields = ['institution_name', 'degree', 'field_of_study', 'start_date', 'end_date', 'grade', 'institution_logo']
 
 
-
- # Video Form
-class VideoForm(forms.ModelForm):
-    class Meta:
-        model = Video
-        fields = ['title', 'video_file']
-
-# Create a formset for Video
-VideoFormSet = modelformset_factory(Video, form=VideoForm, extra=1)
-
-# Document Form
-class DocumentForm(forms.ModelForm):
-    class Meta:
-        model = Document
-        fields = ['title', 'file']
-
-class QuizForm(forms.ModelForm):
-    class Meta:
-        model = Quiz
-        fields = ['title', 'description', 'marks']  # Include the fields you want in the form
 
 
 from django import forms

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Document,Video,Question,Quiz,Option,Student, Teacher, Education, Internship, Skill
+from .models import Question,Quiz,Option,Student, Teacher, Education, Internship, Skill
 
 class EducationInline(admin.TabularInline):  
     model = Education
@@ -48,13 +48,10 @@ class TeacherAdmin(admin.ModelAdmin):
 
 
 
-@admin.register(Video)
-class VideoAdmin(admin.ModelAdmin):
-    list_display = ['title', 'video_file']
-admin.site.register(Document)
 
 
-from .models import Video,Document,Quiz, Question, Option
+
+from .models import Quiz, Question, Option
 
 # Register Quiz model
 @admin.register(Quiz)

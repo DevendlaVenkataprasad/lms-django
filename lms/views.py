@@ -18,8 +18,7 @@ from django.core.files.storage import FileSystemStorage
 
 import os
 from django.contrib import messages
-from .models import Video,Document,Quiz, Question, Option
-from .forms import VideoFormSet,DocumentForm
+from .models import Quiz, Question, Option
 
 
 
@@ -504,52 +503,6 @@ def save_internship(request):
             return JsonResponse({"success": True, "message": "Internship added successfully!"})
 
     return JsonResponse({"success": False, "error": "Invalid request"}, status=400)
-
-
-def add_content(request):
-    return render(request,'add_content.html')
-def view_all(request):
-    return render(request,'view_all.html')
-
-""" Documents"""
-
-
-def upload_document(request):
-    if request.method == 'POST':
-        form = DocumentForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('upload_document')  # Redirect to the list view after successful upload
-    else:
-        form = DocumentForm()
-
-    return render(request, 'upload_document.html', {'form': form})
-
-def document_list(request):
-    documents = Document.objects.all()
-
-    # Add file extension as metadata for each document
-    for doc in documents:
-        doc.file_extension = os.path.splitext(doc.file.url)[-1].lower()  # e.g., '.pdf', '.jpg'
-    
-    return render(request, 'document_list.html', {'documents': documents})
-""" video"""
-def video_list(request):
-    videos = Video.objects.all()
-    return render(request, 'video_list.html', {'videos': videos})
-
-def upload_videos(request):
-    if request.method == 'POST':
-        formset = VideoFormSet(request.POST, request.FILES)
-        if formset.is_valid():
-            formset.save()
-            messages.info(request, '*Upload successfully done*')
-            #return redirect('pload_videos')  # Ensure this matches the name in urls.py
-    else:
-        formset = VideoFormSet(queryset=Video.objects.none())
-
-    return render(request, 'upload_videos.html', {'formset': formset})
-
 
 # views.py
 from django.shortcuts import render, redirect, get_object_or_404

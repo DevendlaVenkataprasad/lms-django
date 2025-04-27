@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import   settings_view,vote_item,post_answer, course_forum,submit_review,generate_certificate,student_my_courses,student_course_progress_view,enrolled_students_view,teacher_course_list_view,mark_as_complete,student_progress_view,teacher_course_progress_view,delete_course,view_course_students,delete_course_content,view_course,enroll_course,add_course_content,add_course,document_list,view_all,add_content,upload_videos,video_list,create_quiz,quiz_list,attempt_quiz,submit_quiz,upload_document,save_internship,delete_internship,delete_education,upload_profile_picture,edit_education,edit_profile,update_profile,profile_view,chatbot_response,student_dashboard_view, teacher_dashboard_view,send_otp,home_view,login_view, register_view, logout_view, forgot_password_view,reset_password_view,verify_otp
+from .views import   settings_view,vote_item,post_answer, course_forum,submit_review,generate_certificate,student_my_courses,student_course_progress_view,enrolled_students_view,teacher_course_list_view,mark_as_complete,student_progress_view,teacher_course_progress_view,delete_course,view_course_students,delete_course_content,view_course,enroll_course,add_course_content,add_course,create_quiz,quiz_list,attempt_quiz,submit_quiz,save_internship,delete_internship,delete_education,upload_profile_picture,edit_education,edit_profile,update_profile,profile_view,chatbot_response,student_dashboard_view, teacher_dashboard_view,send_otp,home_view,login_view, register_view, logout_view, forgot_password_view,reset_password_view,verify_otp
 
 urlpatterns = [
     path('login/', login_view, name='login'),
@@ -24,13 +24,7 @@ urlpatterns = [
     path('delete-internship/<int:internship_id>/', delete_internship, name="delete_internship"),
     
 
-    path('upload-document/', upload_document, name='upload_document'),
-    path('document-list/', document_list, name='document_list'),
-    path('view_all/',view_all,name='view_all'),
-    path('add_content/',add_content,name='add_content'),
-
-    path('upload-videos/', upload_videos, name='upload_videos'),
-    path('video-list/', video_list, name='video_list'),
+   
 
     
     path('course_content/<int:course_content_id>/quiz/create/', create_quiz, name='create_quiz'),

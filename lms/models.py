@@ -66,22 +66,6 @@ class Skill(models.Model):
     name = models.CharField(max_length=100)
 
 
-class Video(models.Model):
-    title = models.CharField(max_length=200)
-    video_file = models.FileField(upload_to='videos/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
-
-class Document(models.Model):
-    title = models.CharField(max_length=255)
-    file = models.FileField(upload_to='documents/')  # The file will be stored in 'MEDIA_ROOT/documents/'
-    uploaded_date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
-
 
 class Quiz(models.Model):
     course_content = models.ForeignKey('CourseContent', on_delete=models.CASCADE, related_name='quizzes',null=True, blank=True)
