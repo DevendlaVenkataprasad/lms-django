@@ -17,12 +17,14 @@ django-modeltranslation==0.19.13
 django-otp==1.5.4
 django-tinymce==4.1.0
 fonttools==4.57.0
+gunicorn==23.0.0
 h11==0.14.0
 httpcore==1.0.7
 httpx==0.28.1
 idna==3.10
 jiter==0.8.2
 openai==1.65.2
+packaging==25.0
 pillow==11.1.0
 pycparser==2.22
 pydantic==2.10.6
