@@ -34,6 +34,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+if os.getenv('RENDER'):
+    ALLOWED_HOSTS += ["lms-project-h5ux.onrender.com"]
 # Application definition
 
 INSTALLED_APPS = [
